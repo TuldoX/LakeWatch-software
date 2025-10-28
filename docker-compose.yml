@@ -35,7 +35,7 @@ services:
       - "9000"
     env_file: .env
     volumes:
-      - ./backend:/var/www/html
+      - ./backend:/var/www/backend
     depends_on:
       - database
     networks:
