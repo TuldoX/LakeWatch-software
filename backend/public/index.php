@@ -21,5 +21,6 @@ $errorMiddleware->setErrorHandler(HttpNotFoundException::class, function () use 
 });
 
 $app->get('/users/{id}/probes', [\App\Controller\UserController::class, 'getProbes']);
+$app->get('/probes/{id}/data/{hours}',[\App\Controller\ProbeController::class,'getData']);
 
 $app->run();
