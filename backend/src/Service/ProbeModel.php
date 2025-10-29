@@ -23,8 +23,6 @@ class ProbeModel {
     }
 
     public function getProbeValues(string $probe_id, string $hours) : array{
-         $hours = (int)$hours;
-
         $sql = "
             SELECT
                 temp,
@@ -36,7 +34,7 @@ class ProbeModel {
             WHERE time_recieved >= NOW() - INTERVAL '$hours hours'
             AND probe_id = $1
         ";
-        
+
         $result = pg_query_params($this->db, $sql, [$probe_id]);
 
         if (!$result) {

@@ -13,7 +13,14 @@ class UserController {
     }
 
     public function getProbes(Request $request, Response $response, array $args): Response {
-        $userId = $args['id'];
+        $userId = intval($args['id']);
+
+         if(!is_int($userId)){
+            $response->getBody()->write(json_encode([
+                    'error' => 'Invalid data sent'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
 
         try {
             if ($this->userModel->userExists($userId)) {

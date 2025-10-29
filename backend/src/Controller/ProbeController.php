@@ -14,8 +14,15 @@ class ProbeController {
     }
 
     public function getData(Request $request, Response $response, array $args){
-        $probe_id = $args['id'];
-        $hours = $args['hours'];
+        $probe_id = intval($args['id']);
+        $hours = intval($args['hours']);
+
+        if(!is_int($hours) || !is_int($probe_id)){
+            $response->getBody()->write(json_encode([
+                    'error' => 'Invalid data sent'
+                ]));
+                return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+        }
 
         try {
             if($this->probeModel->probeExists($probe_id)) {
