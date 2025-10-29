@@ -1,17 +1,13 @@
 <?php
 namespace App\Service;
 
-use Psr\Container\ContainerInterface;
+use App\Database\Database;
 
 class UserModel {
     protected $db;
 
-    public function __construct(ContainerInterface $container) {
-        $this->db = $container->get('db');
-
-        if (!$this->db) {
-            throw new \Exception("Database connection not available");
-        }
+    public function __construct(Database $database) {
+        $this->db = $database->getConnection();
     }
 
     public function userExists(string $id): bool {
@@ -27,7 +23,15 @@ class UserModel {
     }
 
     public function getProbesByUser(string $id): array {
-        $sql = "SELECT * FROM probes WHERE user_id = $1";
+        $sql = "SELECT 
+                    probes.id AS probe_id,
+                    probes.name,
+                    locations.name AS location,
+                    probes.btr_life,
+                    probes.lst_data
+                FROM probes
+                INNER JOIN locations ON locations.id = probes.location_id
+                WHERE user_id=$1";
         $result = pg_query_params($this->db, $sql, [$id]);
 
         if (!$result) {
