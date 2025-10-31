@@ -43,4 +43,34 @@ class ProbeModel {
 
         return pg_fetch_all($result) ?: [];
     }
+
+    public function postData(string $probe_id, string $btr_life, string $temp, string $tds, string $o2, string $ph){
+        $insertSql = "
+            INSERT INTO values (probe_id, temp, tds, oxygen, ph, time_recieved)
+            VALUES ($1, $2, $3, $4, $5, NOW())
+            RETURNING *;
+        ";
+
+        $insertResult = pg_query_params($this->db, $insertSql, [$probe_id, $temp, $tds, $o2, $ph]);
+        if (!$insertResult) {
+            throw new \Exception("Insert failed: " . pg_last_error($this->db));
+        }
+
+        $inserted = pg_fetch_all($insertResult);
+
+        $updateSql = "
+            UPDATE probes
+            SET btr_life = $1,
+            lst_data = NOW()
+            WHERE id = $2;
+        ";
+
+        $updateResult = pg_query_params($this->db, $updateSql, [$btr_life,$probe_id]);
+        if (!$updateResult) {
+            throw new \Exception("Battery update failed: " . pg_last_error($this->db));
+        }
+
+        return $inserted ?: [];
+    }
+
 }
