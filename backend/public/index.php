@@ -20,8 +20,8 @@ $errorMiddleware->setErrorHandler(HttpNotFoundException::class, function () use 
     return $response->withHeader('Content-Type', 'text/html')->withStatus(404);
 });
 
-$app->get('/users/{id}/probes', [\App\Controller\UserController::class, 'getProbes']);
-$app->get('/probes/{id}/data/{hours}',[\App\Controller\ProbeController::class,'getData']);
-$app->post('/data',[\App\Controller\ProbeController::class,'postData']);
+$app->get('/api/users/{id}/probes', [\App\Controller\UserController::class, 'getProbes']);
+$app->get('/api/probes/{id}/data/{hours}',[\App\Controller\ProbeController::class,'getData']);
+$app->post('/api/data',[\App\Controller\ProbeController::class,'postData']);
 
 $app->run();
