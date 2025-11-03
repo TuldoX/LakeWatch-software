@@ -20,6 +20,7 @@
     <main class="main-content">
       <div class="loading" v-if="loading">
         <div class="spinner"></div>
+        <p>Loading probe data...</p>
       </div>
       
       <div class="error" v-else-if="error">
@@ -29,6 +30,14 @@
         </svg>
         <p>{{ error }}</p>
         <button @click="fetchData">Retry</button>
+      </div>
+      
+      <div class="no-data" v-else-if="!probeData?.values?.length">
+        <svg viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2">
+          <path d="M21 21l-6-6m2-5a7 7 0 11-14 0 7 7 0 0114 0z"/>
+        </svg>
+        <p>No data available for this probe</p>
+        <button @click="fetchData">Refresh</button>
       </div>
       
       <div class="charts-grid" v-else>
@@ -47,7 +56,7 @@
             <canvas ref="oxygenChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">5-6 ppm</span>
+            <span class="range">Optimal: 5-6 ppm</span>
           </div>
         </div>
         
@@ -65,7 +74,7 @@
             <canvas ref="temperatureChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">20-26 °C</span>
+            <span class="range">Optimal: 20-26 °C</span>
           </div>
         </div>
         
@@ -83,7 +92,7 @@
             <canvas ref="phChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">6.5-7.5 pH</span>
+            <span class="range">Optimal: 6.5-7.5 pH</span>
           </div>
         </div>
         
@@ -101,7 +110,7 @@
             <canvas ref="tdsChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">200-400 ppm</span>
+            <span class="range">Optimal: 200-400 ppm</span>
           </div>
         </div>
       </div>
@@ -142,15 +151,15 @@ export default {
       return 'Active'
     },
     latestValues() {
-      if (!this.probeData || !this.probeData.values || this.probeData.values.length === 0) {
+      if (!this.probeData?.values?.length) {
         return { oxygen: '--', temp: '--', ph: '--', tds: '--' }
       }
       const latest = this.probeData.values[this.probeData.values.length - 1]
       return {
-        oxygen: parseFloat(latest.oxygen).toFixed(1),
-        temp: parseFloat(latest.temp).toFixed(1),
-        ph: parseFloat(latest.ph).toFixed(1),
-        tds: parseFloat(latest.tds).toFixed(0)
+        oxygen: parseFloat(latest.oxygen || 0).toFixed(1),
+        temp: parseFloat(latest.temp || 0).toFixed(1),
+        ph: parseFloat(latest.ph || 0).toFixed(1),
+        tds: parseFloat(latest.tds || 0).toFixed(0)
       }
     }
   },
@@ -162,219 +171,193 @@ export default {
   },
   methods: {
     async fetchData() {
-  this.loading = true
-  this.error = null
-  
-  try {
-    const response = await api.getProbeData(this.id, 24)
-    // Store the values array directly in probeData
-    this.probeData = {
-      values: response.values
-    }
-    // Wait for DOM to be fully ready
-    await this.$nextTick()
-    await this.$nextTick()
-    // Add a small delay to ensure canvas elements are ready
-    setTimeout(() => {
-      this.createCharts()
-    }, 100)
-  } catch (err) {
-    this.error = 'Failed to load data'
-    console.error('Error:', err)
-  } finally {
-    this.loading = false
-  }
-},
-    
-   createCharts() {
-  if (!this.probeData || !this.probeData.values) return
-  
-  // Check if canvas refs exist
-  if (!this.$refs.oxygenChart || !this.$refs.temperatureChart || 
-      !this.$refs.phChart || !this.$refs.tdsChart) {
-    console.error('Canvas refs not available yet')
-    return
-  }
-  
-  // Destroy existing charts if any
-  this.destroyCharts()
-  
-  const values = this.probeData.values
-  const labels = values.map(v => {
-    const date = new Date(v.time_recieved)
-    return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
-  })
-  
-  const commonOptions = {
-    responsive: true,
-    maintainAspectRatio: false,
-    interaction: {
-      mode: 'index',
-      intersect: false,
-    },
-    plugins: {
-      legend: {
-        display: false
-      },
-      tooltip: {
-        backgroundColor: 'rgba(30, 41, 59, 0.95)',
-        titleColor: '#f8fafc',
-        bodyColor: '#cbd5e1',
-        borderColor: 'rgba(59, 130, 246, 0.3)',
-        borderWidth: 1,
-        padding: 12,
-        displayColors: false,
-        titleFont: {
-          size: 13,
-          weight: '600'
-        },
-        bodyFont: {
-          size: 12
+      this.loading = true
+      this.error = null
+      
+      try {
+        const response = await api.getProbeData(this.id)
+        
+        this.probeData = {
+          values: response.values || []
         }
+        
+        if (this.probeData.values.length > 0) {
+          await this.$nextTick()
+          setTimeout(() => {
+            this.createCharts()
+          }, 100)
+        }
+      } catch (err) {
+        this.error = 'Failed to load probe data'
+      } finally {
+        this.loading = false
       }
     },
-    scales: {
-      x: {
-        grid: {
-          display: false
-        },
-        ticks: {
-          color: '#64748b',
-          font: {
-            size: 11
-          },
-          maxTicksLimit: 6
-        },
-        border: {
-          display: false
+    
+    createCharts() {
+      if (!this.probeData?.values?.length || !this.$refs.oxygenChart) {
+        return
+      }
+      
+      this.destroyCharts()
+      
+      const values = this.probeData.values
+      const labels = values.map(v => {
+        try {
+          const date = new Date(v.time_recieved)
+          return date.toLocaleTimeString('en-US', { hour: '2-digit', minute: '2-digit' })
+        } catch (e) {
+          return '--:--'
         }
-      },
-      y: {
-        grid: {
-          color: 'rgba(148, 163, 184, 0.1)'
-        },
-        ticks: {
-          color: '#64748b',
-          font: {
-            size: 11
+      })
+      
+      const commonOptions = {
+        responsive: true,
+        maintainAspectRatio: false,
+        plugins: {
+          legend: { display: false },
+          tooltip: {
+            mode: 'index',
+            intersect: false,
+            backgroundColor: 'rgba(30, 41, 59, 0.95)',
+            titleColor: '#f8fafc',
+            bodyColor: '#cbd5e1',
+            borderColor: 'rgba(59, 130, 246, 0.3)',
+            borderWidth: 1,
+            padding: 12,
+            displayColors: false
           }
         },
-        border: {
-          display: false
+        scales: {
+          x: {
+            grid: { display: false },
+            ticks: { color: '#64748b', maxTicksLimit: 6 },
+            border: { display: false }
+          },
+          y: {
+            grid: { color: 'rgba(148, 163, 184, 0.1)' },
+            ticks: { color: '#64748b' },
+            border: { display: false }
+          }
+        },
+        elements: {
+          line: { tension: 0.4 },
+          point: { radius: 0, hoverRadius: 6 }
         }
       }
-    }
-  }
-  
-  // Oxygen Chart
-  try {
-    this.charts.oxygen = new Chart(this.$refs.oxygenChart, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values.map(v => parseFloat(v.oxygen)),
-          borderColor: '#3b82f6',
-          backgroundColor: 'rgba(59, 130, 246, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#3b82f6',
-          pointHoverBorderColor: '#1e293b',
-          pointHoverBorderWidth: 2
-        }]
-      },
-      options: commonOptions
-    })
-  } catch (error) {
-    console.error('Failed to create oxygen chart:', error)
-  }
-  
-  // Temperature Chart
-  try {
-    this.charts.temperature = new Chart(this.$refs.temperatureChart, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values.map(v => parseFloat(v.temp)),
-          borderColor: '#ef4444',
-          backgroundColor: 'rgba(239, 68, 68, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#ef4444',
-          pointHoverBorderColor: '#1e293b',
-          pointHoverBorderWidth: 2
-        }]
-      },
-      options: commonOptions
-    })
-  } catch (error) {
-    console.error('Failed to create temperature chart:', error)
-  }
-  
-  // pH Chart
-  try {
-    this.charts.ph = new Chart(this.$refs.phChart, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values.map(v => parseFloat(v.ph)),
-          borderColor: '#10b981',
-          backgroundColor: 'rgba(16, 185, 129, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#10b981',
-          pointHoverBorderColor: '#1e293b',
-          pointHoverBorderWidth: 2
-        }]
-      },
-      options: commonOptions
-    })
-  } catch (error) {
-    console.error('Failed to create pH chart:', error)
-  }
-  
-  // TDS Chart
-  try {
-    this.charts.tds = new Chart(this.$refs.tdsChart, {
-      type: 'line',
-      data: {
-        labels: labels,
-        datasets: [{
-          data: values.map(v => parseFloat(v.tds)),
-          borderColor: '#f59e0b',
-          backgroundColor: 'rgba(245, 158, 11, 0.1)',
-          borderWidth: 2,
-          fill: true,
-          tension: 0.4,
-          pointRadius: 0,
-          pointHoverRadius: 6,
-          pointHoverBackgroundColor: '#f59e0b',
-          pointHoverBorderColor: '#1e293b',
-          pointHoverBorderWidth: 2
-        }]
-      },
-      options: commonOptions
-    })
-  } catch (error) {
-    console.error('Failed to create TDS chart:', error)
-  }
-},
+      
+      // Oxygen Chart
+      this.charts.oxygen = new Chart(this.$refs.oxygenChart, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values.map(v => parseFloat(v.oxygen)),
+            borderColor: '#3b82f6',
+            backgroundColor: 'rgba(59, 130, 246, 0.1)',
+            borderWidth: 2,
+            fill: true
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: { 
+              ...commonOptions.scales.y,
+              min: 0,
+              max: 250
+            }
+          }
+        }
+      })
+      
+      // Temperature Chart
+      this.charts.temperature = new Chart(this.$refs.temperatureChart, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values.map(v => parseFloat(v.temp)),
+            borderColor: '#ef4444',
+            backgroundColor: 'rgba(239, 68, 68, 0.1)',
+            borderWidth: 2,
+            fill: true
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: { 
+              ...commonOptions.scales.y,
+              min: 15,
+              max: 30
+            }
+          }
+        }
+      })
+      
+      // pH Chart
+      this.charts.ph = new Chart(this.$refs.phChart, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values.map(v => parseFloat(v.ph)),
+            borderColor: '#10b981',
+            backgroundColor: 'rgba(16, 185, 129, 0.1)',
+            borderWidth: 2,
+            fill: true
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: { 
+              ...commonOptions.scales.y,
+              min: 6,
+              max: 9
+            }
+          }
+        }
+      })
+      
+      // TDS Chart
+      this.charts.tds = new Chart(this.$refs.tdsChart, {
+        type: 'line',
+        data: {
+          labels,
+          datasets: [{
+            data: values.map(v => parseFloat(v.tds)),
+            borderColor: '#f59e0b',
+            backgroundColor: 'rgba(245, 158, 11, 0.1)',
+            borderWidth: 2,
+            fill: true
+          }]
+        },
+        options: {
+          ...commonOptions,
+          scales: {
+            ...commonOptions.scales,
+            y: { 
+              ...commonOptions.scales.y,
+              min: 0,
+              max: 500
+            }
+          }
+        }
+      })
+    },
     
     destroyCharts() {
       Object.values(this.charts).forEach(chart => {
-        if (chart) chart.destroy()
+        if (chart && typeof chart.destroy === 'function') {
+          chart.destroy()
+        }
       })
+      this.charts = {}
     },
     
     goBack() {
@@ -466,13 +449,22 @@ export default {
 }
 
 .loading,
-.error {
+.error,
+.no-data {
   display: flex;
   flex-direction: column;
   align-items: center;
   justify-content: center;
   padding: 60px 20px;
   text-align: center;
+  gap: 16px;
+}
+
+.loading p,
+.error p,
+.no-data p {
+  color: var(--text-secondary);
+  font-size: 16px;
 }
 
 .spinner {
@@ -484,20 +476,15 @@ export default {
   animation: spin 1s linear infinite;
 }
 
-.error svg {
+.error svg,
+.no-data svg {
   width: 64px;
   height: 64px;
   color: var(--text-secondary);
-  margin-bottom: 16px;
 }
 
-.error p {
-  color: var(--text-secondary);
-  font-size: 16px;
-  margin-bottom: 20px;
-}
-
-.error button {
+.error button,
+.no-data button {
   padding: 12px 24px;
   background: var(--accent-blue);
   color: white;
@@ -509,7 +496,8 @@ export default {
   transition: all 0.3s ease;
 }
 
-.error button:hover {
+.error button:hover,
+.no-data button:hover {
   background: #2563eb;
   transform: translateY(-2px);
   box-shadow: var(--shadow);
@@ -690,5 +678,15 @@ export default {
   .header-info h1 {
     font-size: 18px;
   }
+}
+
+@keyframes spin {
+  0% { transform: rotate(0deg); }
+  100% { transform: rotate(360deg); }
+}
+
+@keyframes pulse {
+  0%, 100% { opacity: 1; }
+  50% { opacity: 0.5; }
 }
 </style>
