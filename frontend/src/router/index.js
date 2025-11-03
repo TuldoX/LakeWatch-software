@@ -4,12 +4,12 @@ import ProbeDetails from '../views/ProbeDetails.vue'
 
 const routes = [
   {
-    path: '/',
+    path: '/app',
     name: 'Home',
     component: HomePage
   },
   {
-    path: '/probe/:id',
+    path: '/app/probe/:id',
     name: 'ProbeDetails',
     component: ProbeDetails,
     props: true
