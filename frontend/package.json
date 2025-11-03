@@ -1,22 +1,20 @@
 {
-  "name": "frontend",
-  "version": "0.0.0",
-  "private": true,
+  "name": "water-monitoring-app",
+  "version": "2.0.0",
   "type": "module",
-  "engines": {
-    "node": "^20.19.0 || >=22.12.0"
-  },
   "scripts": {
     "dev": "vite",
     "build": "vite build",
     "preview": "vite preview"
   },
   "dependencies": {
-    "vue": "^3.5.22"
+    "vue": "^3.5.12",
+    "vue-router": "^4.3.0",
+    "chart.js": "^4.4.5",
+    "axios": "^1.7.8"
   },
   "devDependencies": {
     "@vitejs/plugin-vue": "^6.0.1",
-    "vite": "^7.1.11",
-    "vite-plugin-vue-devtools": "^8.0.3"
+    "vite": "^5.4.10"
   }
 }
