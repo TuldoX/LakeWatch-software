@@ -50,13 +50,13 @@
               </svg>
               <h3>Oxygen</h3>
             </div>
-            <span class="value">{{ latestValues.oxygen }} <small>ppm</small></span>
+            <span class="value">{{ latestValues.oxygen }} <small>mg/L</small></span>
           </div>
           <div class="chart-wrapper">
             <canvas ref="oxygenChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">Optimal: 5-6 ppm</span>
+            <span class="range">Optimal: 6.5-8 mg/L</span>
           </div>
         </div>
         
@@ -74,7 +74,7 @@
             <canvas ref="temperatureChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">Optimal: 20-26 °C</span>
+            <span class="range">Optimal: 15-20 °C</span>
           </div>
         </div>
         
@@ -92,7 +92,7 @@
             <canvas ref="phChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">Optimal: 6.5-7.5 pH</span>
+            <span class="range">Optimal: 6.5-8.5 pH</span>
           </div>
         </div>
         
@@ -104,13 +104,13 @@
               </svg>
               <h3>TDS</h3>
             </div>
-            <span class="value">{{ latestValues.tds }} <small>ppm</small></span>
+            <span class="value">{{ latestValues.tds }} <small>mg/L</small></span>
           </div>
           <div class="chart-wrapper">
             <canvas ref="tdsChart"></canvas>
           </div>
           <div class="chart-footer">
-            <span class="range">Optimal: 200-400 ppm</span>
+            <span class="range">Optimal: 50-250 mg/L</span>
           </div>
         </div>
       </div>
@@ -266,7 +266,7 @@ export default {
             y: { 
               ...commonOptions.scales.y,
               min: 0,
-              max: 250
+              max: 20
             }
           }
         }
