@@ -1,0 +1,9 @@
+# Slim 4 rewrite rules for Apache
+<IfModule mod_rewrite.c>
+    Options -Multiviews
+    RewriteEngine On
+
+    RewriteCond %{REQUEST_FILENAME} !-f
+    RewriteCond %{REQUEST_FILENAME} !-d
+    RewriteRule ^ index.php [QSA,L]
+</IfModule>

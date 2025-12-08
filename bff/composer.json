@@ -1,5 +1,5 @@
 {
-  "name": "lakewatch/service",
+  "name": "lakewatch/bff",
   "description": "Slim PHP API server with JWT auth and PostgreSQL",
   "type": "project",
   "require": {
@@ -11,7 +11,7 @@
   },
   "autoload": {
     "psr-4": {
-      "Service\\": "src/"
+      "Bff\\": "src/"
     }
   },
   "scripts": {

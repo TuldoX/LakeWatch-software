@@ -4,12 +4,13 @@ services:
     image: postgres:17.6
     restart: unless-stopped
     env_file: .env
-    expose:
-      - "5432"
+    ports:
+      - "5432:5432"
     volumes:
       - ./data/postgresql:/var/lib/postgresql/data
     networks:
-      - lakewatch_net
+      default:
+        ipv4_address: ${DOCKER_NETWORK_DB_IP}
 
   pgadmin:
     container_name: pg_admin
@@ -23,38 +24,87 @@ services:
     depends_on:
       - database
     networks:
-      - lakewatch_net
+      default:
+        ipv4_address: ${DOCKER_NETWORK_PGADMIN_IP}
 
   backend:
-    container_name: php_fpm
+    container_name: api
     build:
       context: ./backend
       dockerfile: Dockerfile
     restart: unless-stopped
-    expose:
-      - "9000"
+    ports:
+      - 8081:80
     env_file: .env
     volumes:
       - ./backend:/var/www/backend
     depends_on:
       - database
     networks:
-      - lakewatch_net
-  
-  nginx:
-    image: nginx:latest
-    container_name: nginx
-    restart: unless-stopped
-    ports:
-      - "80:80"
+      default:
+        ipv4_address: ${DOCKER_NETWORK_API_IP}
+
+  bff:
+    build:
+      context: ./bff
+      dockerfile: Dockerfile
+    container_name: bff
     depends_on:
       - backend
-    volumes:
-      - ./nginx/default.conf:/etc/nginx/conf.d/default.conf:ro
-      - ./frontend/dist:/var/www/frontend/dist
+    env_file:
+      - .env
+    ports:
+      - 8082:80
     networks:
-      - lakewatch_net
+      default:
+        ipv4_address: ${DOCKER_NETWORK_BFF_IP}
+
+  nginx:
+    image: nginx:1.29.3
+    container_name: reverse-proxy
+    restart: unless-stopped
+    volumes:
+      - ../nginx/config:/etc/nginx/conf.d/
+      - ../nginx/log/:/var/log/nginx/
+    ports:
+      - "80:80"
+    networks:
+      default:
+        ipv4_address: ${DOCKER_NETWORK_PROXY_IP}
+
+  keycloak-db:
+    image: postgres:17.6
+    container_name: keycloak-db
+    env_file:
+      - .env.keycloak
+    volumes:
+      - ./keycloak-db-data:/var/lib/postgresql/data
+    ports:
+    - "5433:5432"
+    networks:
+      default:
+        ipv4_address: ${DOCKER_NETWORK_KEYCLOAKDB_IP}
+  
+  keycloak:
+    image: quay.io/keycloak/keycloak:25.0
+    container_name: keycloak
+    command: start
+    env_file:
+      - .env.keycloak
+    depends_on:
+      - keycloak-db
+    ports:
+    - "8084:8080"
+    networks:
+      default:
+        ipv4_address: ${DOCKER_NETWORK_KEYCLOAK_IP}
+
+  
 
 networks:
-  lakewatch_net:
+  default:
+    name: ${DOCKER_NETWORK}
     driver: bridge
+    ipam:
+      config:
+        - subnet: ${DOCKER_NETWORK_SUBNET}
