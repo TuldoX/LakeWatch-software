@@ -4,3 +4,4 @@
 .keycloak.env
 /keycloak-db-data
 /frontend/dist
+/nginx/log
