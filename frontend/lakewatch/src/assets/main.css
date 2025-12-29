@@ -1,0 +1,9 @@
+.page-title {
+  font-family: 'Inter', sans-serif;
+  font-weight: 700;
+  font-size: clamp(1.625rem, 8vw, 2rem); 
+  letter-spacing: -0.04em;
+  color: #000000;
+  margin-bottom: 16px;
+  padding-left: 20px;
+}
