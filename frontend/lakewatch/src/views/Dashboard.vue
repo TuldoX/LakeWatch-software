@@ -1,6 +1,7 @@
 <script setup>
   import Search from '../components/dashboard/Search.vue'
   import Device from  '../components/dashboard/Device.vue'
+  import Navigation from '@/components/Navigation.vue'
 </script>
 
 <template>
@@ -14,6 +15,7 @@
     <div class="device-wrapper">
       <Device/>
     </div>
+    <Navigation/>
   </div>
 </template>
 

@@ -9,6 +9,11 @@
   --warning: #ED6C02;
   --error:  #D32F2F;
   --backroud-progress-rgb: 90, 95 ,102;
+  --button-main: #1976D2;
+}
+
+html {
+  scroll-behavior: smooth;
 }
 
 body {
@@ -28,10 +33,11 @@ body {
 }
 
 .page-container {
-  padding: 0 1rem 1rem 1rem;
   display: flex;
   flex-direction: column;
+  padding: 0 1rem calc(5rem + env(safe-area-inset-bottom)) 1rem;
 }
+
 
 .container-search {
   border: 1px solid var(--border);
