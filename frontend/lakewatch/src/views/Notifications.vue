@@ -2,7 +2,10 @@
   import Navigation from '@/components/Navigation.vue';
 </script>
 <template>
-  <h1>Notifications</h1>
+  <div class="page-container">
+    <h1 class="page-title">Notifications</h1>
+  </div>
+  
   <Navigation/>
 </template>
 <style scoped>

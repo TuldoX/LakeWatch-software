@@ -59,7 +59,7 @@ import settingsActive from '@/assets/icons/settings-active.png'
 }
 
 .nav-label {
-  font-size: 0.813rem;
+  font-size: clamp(0.75rem, 1vw, 0.813rem);
   color: var(--text-secondary);
   font-weight: 500;
 }

@@ -4,8 +4,8 @@
   const progress = ref(75) // percentage (0–100)
 </script>
 <template>
+  <router-link to="/device">
   <div class="container-surface">
-
     <div class="top-row">
       <div class="device-name">
         <div id="device-image-wrapper">
@@ -43,7 +43,7 @@
       </div>
     </div>
   </div>
-
+</router-link>
 </template>
 <style scoped>
     #device-image {
@@ -183,5 +183,12 @@
 
     .helper-extender {
       gap: 1.05rem;
+    }
+
+    a {
+      text-decoration: none;
+      display: block;
+      max-width: 23.6875rem;
+      width: 100%;
     }
 </style>
