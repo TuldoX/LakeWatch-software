@@ -75,11 +75,25 @@ body {
   width: 100%;
   max-width: 23.6875rem;
   border-radius: 15px;
-  box-shadow: 0 2px 4px rgba(0,0,0,0.05);
+  box-shadow: 
+    0 5px 10px rgba(0, 0, 0, 0.25),
+    0 15px 45px rgba(0, 0, 0, 0.10);
   display: flex;
   align-items: center;
   flex-direction: column;
   padding: 0.2rem 0.8rem 0.6rem 0.8rem;
   box-sizing: border-box;
   margin-bottom: 1rem;
+}
+
+.container-surface-no-style {
+  width: 100%;
+  max-width: 23.6875rem;
+  display: flex;
+  padding: 0rem 0.8rem 0.5rem 0.8rem;
+  box-sizing: border-box;
+  flex-direction: row;
+  gap: 1.1rem;
+  align-items: center;
+  margin-bottom: 0;
 }

@@ -1,4 +1,5 @@
 <script setup>
+  import DeviceName from '../components/device-details/DeviceName.vue';
 </script>
 <template>
   <div class="page-container">
@@ -8,6 +9,7 @@
       <h1 class="page-title-back">Back to dashboard</h1>
     </div>
     </router-link>
+    <DeviceName/>
   </div>
 </template>
 <style scoped>
@@ -32,6 +34,6 @@
     align-items: center;
     gap: 0.5rem;
     margin-top: 0.8rem;
-    margin-bottom: 16px; 
+    margin-bottom: 0.5rem; 
   }
 </style>
