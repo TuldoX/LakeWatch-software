@@ -1,4 +1,5 @@
 <script setup>
+  import DeviceInfo from '@/components/device-details/DeviceInfo.vue';
   import DeviceName from '../components/device-details/DeviceName.vue';
 </script>
 <template>
@@ -10,6 +11,9 @@
     </div>
     </router-link>
     <DeviceName/>
+    <div class="info-wrapper">
+      <DeviceInfo/>
+    </div>
   </div>
 </template>
 <style scoped>
@@ -35,5 +39,13 @@
     gap: 0.5rem;
     margin-top: 0.8rem;
     margin-bottom: 0.5rem; 
+  }
+
+  .info-wrapper {
+    display: flex;
+    flex-direction: column;
+    justify-content: center;
+    width: 100%;
+    align-items: center;
   }
 </style>
