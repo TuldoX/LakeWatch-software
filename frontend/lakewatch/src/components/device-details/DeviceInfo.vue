@@ -24,14 +24,6 @@
       padding: 0.75rem 1rem 0.75rem 1rem;
     }
 
-    .h2-info{
-      font-size: clamp(0.875rem, 1rem + 0.25vw, 1.125rem);
-      color: black;
-      font-weight: 600;
-      margin: 0 0 0.5rem 0;
-      text-align: left;
-    }
-
     hr.solid {
       border-top: 1px solid var(--border);
       width: 100%;
@@ -63,19 +55,5 @@
       font-size: clamp(0.75rem, 0.875rem + 0.25vw, 1rem);
       margin: 0;
       white-space: nowrap;
-    }
-
-    .secondary-bold {
-        color: #5A5F66;
-        font-size: clamp(0.75rem, 0.875rem + 0.25vw, 1rem);
-        font-weight: 600;
-        margin: 0;
-        text-align: right;
-    }
-
-    .h2-info-container {
-        width: 100%;
-        display: flex;
-        justify-content: flex-start;
     }
 </style>

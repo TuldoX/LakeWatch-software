@@ -97,3 +97,25 @@ body {
   align-items: center;
   margin-bottom: 0;
 }
+
+.h2-info{
+      font-size: clamp(0.875rem, 1rem + 0.25vw, 1.125rem);
+      color: black;
+      font-weight: 600;
+      margin: 0 0 0.5rem 0;
+      text-align: left;
+    }
+
+  .h2-info-container {
+        width: 100%;
+        display: flex;
+        justify-content: flex-start;
+    }
+    
+.secondary-bold {
+        color: #5A5F66;
+        font-size: clamp(0.75rem, 0.875rem + 0.25vw, 1rem);
+        font-weight: 600;
+        margin: 0;
+        text-align: right;
+    }
