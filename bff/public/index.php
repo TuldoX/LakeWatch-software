@@ -1,6 +1,11 @@
 <?php
-// Simple test index.php for BFF container
+require __DIR__ . '/../vendor/autoload.php';
 
-header('Content-Type: text/plain');
+use Slim\Factory\AppFactory;
+use Bff\Controller\DeviceController;
 
-echo "Hey, you did it, you are on BFF!";
+$app = AppFactory::create();
+
+$devicecontroller = new DeviceController();
+
+$devicecontroller->hello();

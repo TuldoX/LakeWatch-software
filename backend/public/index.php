@@ -1,6 +1,9 @@
 <?php
-// Simple test index.php for BFF container
+require __DIR__ . '/../vendor/autoload.php';
 
-header('Content-Type: text/plain');
+use Slim\Factory\AppFactory;
+use App\Controllers\DeviceController;
 
-echo "Hey, you did it, you are on API!";
+$app = AppFactory::create();
+
+echo("Hello");

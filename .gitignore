@@ -1,6 +1,11 @@
 .env
 /data
 /backend/vendor
+/backend/.composer
+/backend/.bash_history
+/bff/vendor
+/bff/.composer
+/bff/.bash_history
 .keycloak.env
 /keycloak-db-data
 /frontend/dist

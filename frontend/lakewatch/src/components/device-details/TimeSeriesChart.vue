@@ -61,8 +61,8 @@ const chartConfig = {
     color: '#3B82F6',
     label: 'O2 (mg/L)',
     min: 0,
-    max: 15,
-    stepSize: 5
+    max: 14,
+    stepSize: 2
   },
   ph: {
     color: '#F59E0B',
@@ -115,8 +115,8 @@ const createChart = () => {
         backgroundColor: `${config.value.color}00`,
         pointBackgroundColor: config.value.color,
         pointBorderColor: config.value.color,
-        pointRadius: 6,
-        pointHoverRadius: 8,
+        pointRadius: 5,
+        pointHoverRadius: 5,
         borderWidth: 2,
         tension: 0.4,
         fill: false,

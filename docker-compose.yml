@@ -17,7 +17,7 @@ services:
     image: dpage/pgadmin4:latest
     restart: unless-stopped
     env_file: .env
-    ports:   # optional: only needed if you want to access pgAdmin from host browser
+    ports:
       - "8088:80"
     volumes:
       - ./data/pgadmin:/var/lib/pgadmin
@@ -30,14 +30,14 @@ services:
   api:
     container_name: api
     build:
-      context: ./backend
       dockerfile: Dockerfile
+      target: development  # ← Use development stage
     restart: unless-stopped
     expose:
       - "80"
     env_file: .env
     volumes:
-      - ./backend:/var/www/backend
+      - ./backend:/var/www  # ← Mount entire backend directory
     depends_on:
       - postgres
     networks:
@@ -46,14 +46,16 @@ services:
 
   bff:
     build:
-      context: ./bff
       dockerfile: Dockerfile
+      target: development  # ← Use development stage
     container_name: bff
     restart: unless-stopped
     depends_on:
       - api
     env_file:
       - .env
+    volumes:
+      - ./bff:/var/www  # ← Mount entire bff directory
     expose:
       - "80"
     networks:
@@ -71,10 +73,10 @@ services:
     volumes:
       - ./nginx/config:/etc/nginx/conf.d/
       - ./nginx/log/:/var/log/nginx/
-      - ./frontend/dist:/usr/share/nginx/html  # Vue dist folder
-    ports:              # ONLY THINGS EXPOSED PUBLICLY
+      - ./frontend/dist:/usr/share/nginx/html
+    ports:
       - "80:80"
-      # - "443:443"    # enable when you add SSL
+      # - "443:443"
     networks:
       default:
         ipv4_address: ${DOCKER_NETWORK_PROXY_IP}
