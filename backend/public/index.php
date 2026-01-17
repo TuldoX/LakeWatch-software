@@ -1,9 +1,18 @@
 <?php
-require __DIR__ . '/../vendor/autoload.php';
+// Simple test endpoint
+header('Content-Type: application/json');
 
-use Slim\Factory\AppFactory;
-use App\Controllers\DeviceController;
+// Check for Bearer token
+$headers = getallheaders();
+if (!isset($headers['Authorization'])) {
+    http_response_code(401);
+    echo json_encode(['error' => 'No authorization header']);
+    exit;
+}
 
-$app = AppFactory::create();
-
-echo("Hello");
+// Return success
+echo json_encode([
+    'message' => 'API endpoint works!',
+    'timestamp' => date('Y-m-d H:i:s'),
+    'auth_header' => $headers['Authorization']
+]);
