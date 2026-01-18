@@ -1,18 +1,45 @@
 <?php
-// Simple test endpoint
-header('Content-Type: application/json');
+require __DIR__ . '/../vendor/autoload.php';
 
-// Check for Bearer token
-$headers = getallheaders();
-if (!isset($headers['Authorization'])) {
-    http_response_code(401);
-    echo json_encode(['error' => 'No authorization header']);
-    exit;
-}
+use Slim\Factory\AppFactory;
+use App\Controller\ProbeController;
+use App\Database\Database;
+use App\Service\AuthService;
+use App\Service\ProbeModel;
+use Dotenv\Dotenv;
+use DI\ContainerBuilder;
 
-// Return success
-echo json_encode([
-    'message' => 'API endpoint works!',
-    'timestamp' => date('Y-m-d H:i:s'),
-    'auth_header' => $headers['Authorization']
+$dotenv = Dotenv::createImmutable(__DIR__ . '/..');
+$dotenv->load();
+
+//build DI container
+$containerBuilder = new ContainerBuilder();
+
+//add database to DI
+$containerBuilder->addDefinitions([
+    Database::class => function() {
+        return new Database();
+    },
+    AuthService::class => function() {
+        return new AuthService();
+    },
+     ProbeModel::class => function($c) {
+        return new ProbeModel($c->get(Database::class));
+    },
+    ProbeController::class => function($c) {
+        return new ProbeController(
+            $c->get(ProbeModel::class),
+            $c->get(AuthService::class)
+        );
+    }
 ]);
+
+$container = $containerBuilder->build();
+AppFactory::setContainer($container);
+
+$app = AppFactory::create();
+$app->addBodyParsingMiddleware();
+
+$app->post('/data', [ProbeController::class, 'postData']);
+
+$app->run();
