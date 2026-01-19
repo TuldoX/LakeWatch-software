@@ -79,4 +79,24 @@ class ProbeModel {
             return false;
         }
     }
+
+    public function getData(int $id,int $hours){
+        try {
+            $stmt = $this->db->prepare('
+                SELECT *
+                FROM values
+                WHERE probe_id = :probe_id
+                AND time_recieved >= NOW() - (:hours * INTERVAL \'1 hour\')
+                ORDER BY time_recieved
+            ');
+
+            $stmt->execute([
+                'probe_id' => $id,
+                'hours'    => $hours
+            ]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new \Exception('Database query failed: ' . $e->getMessage());
+        }
+    }
 }

@@ -10,7 +10,6 @@ use App\Service\ProbeModel;
 use App\Service\UserModel;
 use Dotenv\Dotenv;
 use DI\ContainerBuilder;
-use Slim\Exception\HttpNotFoundException;
 
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
@@ -65,9 +64,11 @@ $app->addBodyParsingMiddleware();
 
 $app->post('/data', [ProbeController::class, 'postData']);
 $app->get('/users/{id}/probes',[UserController::class,'getProbes']);
+$app->get('/probes/{id}/data',[ProbeController::class,'getData']);
 
-$app->map(['GET', 'POST'], '/{routes:.+}', function ($request, $response) {
-    throw new HttpNotFoundException($request);
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {
+    $response->getBody()->write(json_encode('Route not found'));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
 });
 
 $app->run();
