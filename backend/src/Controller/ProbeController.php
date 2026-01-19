@@ -28,25 +28,38 @@ class ProbeController {
         $oxygen = $data['oxygen'] ?? null;
         $ph = $data['ph'] ?? null;
 
-        //token validation
         $token = str_replace('Bearer ', '', $request->getHeaderLine('Authorization'));
         
-        if(!$this->probeModel->getToken($token,$id))
+        try {
+            $tokenValid = $this->probeModel->getToken($token, $id);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => 'Database error']));
+            return $response->withHeader('Content-Type', 'application/json')
+                            ->withStatus(500);
+        }
+        
+        if(!$tokenValid)
         {
-            $response->getBody()->write(json_encode(['Unauthorized']));
+            $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
             return $response->withHeader('Content-Type', 'application/json')
                             ->withStatus(403);
         }
 
-        //probe exists
-        if(!$this->probeModel->probeExists($id))
+        try {
+            $exists = $this->probeModel->probeExists($id);
+        } catch (\Exception $e) {
+            $response->getBody()->write(json_encode(['error' => 'Database error']));
+            return $response->withHeader('Content-Type', 'application/json')
+                            ->withStatus(500);
+        }
+        
+        if(!$exists)
         {
-            $response->getBody()->write(json_encode(['Probe does not exist']));
+            $response->getBody()->write(json_encode(['error' => 'Probe does not exist']));
             return $response->withHeader('Content-Type', 'application/json')
                             ->withStatus(404);
         }
 
-        //values validation
         $fields = [
             'batteryLife' => 'int',
             'temperature' => 'float',
@@ -79,14 +92,13 @@ class ProbeController {
                             ->withStatus(400);
         }
 
-        //insert into database
         if(!$this->probeModel->insertData($id,$batteryLife,$temperature,$tds,$oxygen,$ph)){
-            $response->getBody()->write(json_encode('Database operation falied'));
+            $response->getBody()->write(json_encode(['error' => 'Database operation failed']));
             return $response->withHeader('Content-Type', 'application/json')
                             ->withStatus(500);
         }
 
         return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(200);
+                        ->withStatus(200);
     }
 }

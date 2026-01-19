@@ -3,6 +3,7 @@ namespace App\Service;
 
 use App\Database\Database;
 use PDO;
+use PDOException;
 
 class ProbeModel {
     private PDO $db;
@@ -12,21 +13,29 @@ class ProbeModel {
     }
 
     public function probeExists(int $id): bool {
-        $stmt = $this->db->prepare('SELECT EXISTS(SELECT 1 FROM probes WHERE id = :id)');
-        $stmt->execute(['id' => $id]);
-        return (bool) $stmt->fetchColumn();
+        try {
+            $stmt = $this->db->prepare('SELECT EXISTS(SELECT 1 FROM probes WHERE id = :id)');
+            $stmt->execute(['id' => $id]);
+            return (bool) $stmt->fetchColumn();
+        } catch (PDOException $e) {
+            throw new \Exception('Database query failed: ' . $e->getMessage());
+        }
     }
 
     public function getToken(string $token, int $id): bool {
-        $stmt = $this->db->prepare('SELECT auth FROM probes WHERE id = :id LIMIT 1');
-        $stmt->execute(['id' => $id]);
-        $row = $stmt->fetch(PDO::FETCH_ASSOC);
+        try {
+            $stmt = $this->db->prepare('SELECT auth FROM probes WHERE id = :id LIMIT 1');
+            $stmt->execute(['id' => $id]);
+            $row = $stmt->fetch(PDO::FETCH_ASSOC);
 
-        if (!$row) return false;
-        
-        $storedHash = $row['auth'];
+            if (!$row) return false;
+            
+            $storedHash = $row['auth'];
 
-        return password_verify($token, $storedHash);
+            return password_verify($token, $storedHash);
+        } catch (PDOException $e) {
+            throw new \Exception('Database query failed: ' . $e->getMessage());
+        }
     }
 
     public function insertData(int $id, int $batteryLife, float $temperature, int $tds, int $oxygen, float $ph): bool {
@@ -64,7 +73,9 @@ class ProbeModel {
             return true;
             
         } catch (\Exception $e) {
-            $this->db->rollBack();
+            if ($this->db->inTransaction()) {
+                $this->db->rollBack();
+            }
             return false;
         }
     }
