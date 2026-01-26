@@ -7,7 +7,7 @@ use DI\ContainerBuilder;
 use App\Controllers\AuthController;
 use App\Controllers\ApiController;
 use App\Middleware\AuthMiddleware;
-use App\Service\AuthService;
+use App\Services\AuthService;
 use App\Services\KeycloakService;
 use App\Services\TokenService;
 use App\Services\ApiClient;
@@ -60,5 +60,10 @@ $app->get('/auth/callback', [AuthController::class, 'callback']);
 $app->get('/auth/me', [AuthController::class, 'me']);
 $app->any('/api/{path:.*}', [ApiController::class, 'proxy'])
     ->add(new AuthMiddleware());
+
+$app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {
+    $response->getBody()->write(json_encode('Route not found'));
+    return $response->withHeader('Content-Type', 'application/json')->withStatus(400);
+});
 
 $app->run();

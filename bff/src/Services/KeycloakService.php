@@ -2,7 +2,7 @@
 
 namespace App\Services;
 
-use App\Service\AuthService;
+use App\Services\AuthService;
 
 class KeycloakService
 {
@@ -10,6 +10,7 @@ class KeycloakService
 
     public function __construct()
     {
+        $this->clientSecret = $_ENV['CLIENT_SECRET'] ?: '';
         $this->authService = new AuthService();
     }
 
@@ -17,7 +18,7 @@ class KeycloakService
     private string $externalBaseUrl = 'http://accounts.lakewatch.com';
     private string $realm = 'lakewatch';
     private string $clientId = 'lakewatch-bff';
-    private string $clientSecret = $_ENV['CLIENT_SECRET'];
+    private string $clientSecret;
     private string $redirectUri = 'http://app.lakewatch.com/bff/auth/callback';
 
     public function getLoginUrl(): string
