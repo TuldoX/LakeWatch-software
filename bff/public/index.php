@@ -16,8 +16,11 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
+// Session configuration from environment
+$sessionSecure = getenv('SESSION_SECURE') === 'true' ? 1 : 0;
+
 ini_set('session.cookie_httponly', 1);
-ini_set('session.cookie_secure', 1);
+ini_set('session.cookie_secure', $sessionSecure);
 ini_set('session.cookie_samesite', 'Lax');
 
 session_start();

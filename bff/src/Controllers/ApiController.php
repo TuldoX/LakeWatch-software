@@ -23,13 +23,18 @@ class ApiController
         $path = $args['path'];
         $method = $request->getMethod();
 
+        error_log("ApiController.proxy called: method=$method, path=$path");
+
         $result = $this->api->forward(
             $method,
-            "http://app.lakewatch.com/{$path}",
+            "http://app.lakewatch.com/api/{$path}",
             $request
         );
 
+        error_log("ApiClient.forward result: " . json_encode($result));
+
         if ($result === null) {
+            error_log("ApiClient.forward returned null");
             return $response->withStatus(401);
         }
 

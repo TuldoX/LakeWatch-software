@@ -1,7 +1,35 @@
 <script setup>
+  import { onMounted, ref } from 'vue'
   import Search from '../components/dashboard/Search.vue'
-  import Device from  '../components/dashboard/Device.vue'
+  import Device from '../components/dashboard/Device.vue'
   import Navigation from '@/components/Navigation.vue'
+  import { getMe, getProbes } from '@/services/apiService.js'
+
+  const user = ref(null);
+  const probes = ref([]);
+
+  onMounted(async () => {
+    const authenticatedUser = await getMe();
+    if (!authenticatedUser) return;
+  
+    user.value = authenticatedUser
+    
+    try {
+      const userId = user.value.id
+      console.log('Fetching probes for user:', userId);
+      
+      const probesData = await getProbes(userId);
+      console.log('Probes data:', probesData);
+      
+      if (probesData) {
+        probes.value = probesData;
+        localStorage.setItem('probes', JSON.stringify(probesData));
+        console.log('Probes saved to localStorage');
+      }
+    } catch (error) {
+      console.error('Failed to fetch probes:', error);
+    }
+  })
 </script>
 
 <template>
