@@ -21,7 +21,6 @@ class TokenService
             return $_SESSION['tokens']['access_token'];
         }
 
-        // Refresh token
         $newTokens = $this->keycloak->refreshToken(
             $_SESSION['tokens']['refresh_token']
         );

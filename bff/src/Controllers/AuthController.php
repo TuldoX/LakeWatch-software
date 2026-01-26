@@ -15,7 +15,6 @@ class AuthController
         $this->keycloak = new KeycloakService();
     }
 
-    // STEP 1: Redirect to Keycloak login
     public function login(ServerRequestInterface $request, ResponseInterface $response)
     {
         $_SESSION['return_to'] = '/';
@@ -24,7 +23,6 @@ class AuthController
             ->withStatus(302);
     }
 
-    // STEP 2: Keycloak callback
     public function callback(ServerRequestInterface $request, ResponseInterface $response)
     {
         $code = $request->getQueryParams()['code'] ?? null;
@@ -54,9 +52,7 @@ class AuthController
             ->withStatus(302);
     }
 
-    // STEP 3: Return logged-in user info
-    public function me(ServerRequestInterface $request, ResponseInterface $response)
-    {
+    public function me(ServerRequestInterface $request, ResponseInterface $response){
         if (!isset($_SESSION['user'])) {
             return $response->withStatus(401);
         }

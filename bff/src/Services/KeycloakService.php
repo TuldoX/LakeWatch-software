@@ -2,23 +2,26 @@
 
 namespace App\Services;
 
-use Firebase\JWT\JWT;
-use Firebase\JWT\Key;
+use App\Service\AuthService;
 
 class KeycloakService
 {
-    // Internal URL for server-to-server communication within Docker
+    private AuthService $authService;
+
+    public function __construct()
+    {
+        $this->authService = new AuthService();
+    }
+
     private string $baseUrl = 'http://keycloak:8080';
-    // External URL for browser redirects
     private string $externalBaseUrl = 'http://accounts.lakewatch.com';
     private string $realm = 'lakewatch';
     private string $clientId = 'lakewatch-bff';
-    private string $clientSecret = 'iLkj7Fd8FeZCa2pRvkwUVvvqKJexHtDb'; // Replace with your actual secret
+    private string $clientSecret = $_ENV['CLIENT_SECRET'];
     private string $redirectUri = 'http://app.lakewatch.com/bff/auth/callback';
 
     public function getLoginUrl(): string
     {
-        // Use external URL for browser redirect
         return "{$this->externalBaseUrl}/realms/{$this->realm}/protocol/openid-connect/auth"
             . "?client_id={$this->clientId}"
             . "&response_type=code"
@@ -28,7 +31,6 @@ class KeycloakService
 
     public function exchangeCodeForTokens(string $code): array
     {
-        // Use internal URL for server-to-server communication
         $url = "{$this->baseUrl}/realms/{$this->realm}/protocol/openid-connect/token";
         
         $postData = http_build_query([
@@ -45,7 +47,6 @@ class KeycloakService
                 'header' => "Content-Type: application/x-www-form-urlencoded\r\n" .
                            "Content-Length: " . strlen($postData) . "\r\n",
                 'content' => $postData,
-                'ignore_errors' => true, // Important: allows us to read error responses
             ]
         ]);
 
@@ -69,7 +70,6 @@ class KeycloakService
 
     public function refreshToken(string $refreshToken): array
     {
-        // Use internal URL for server-to-server communication
         $url = "{$this->baseUrl}/realms/{$this->realm}/protocol/openid-connect/token";
         
         $postData = http_build_query([
@@ -108,21 +108,18 @@ class KeycloakService
 
     public function getUserFromIdToken(string $idToken): array
     {
-        // For now, decode without verification
-        // In production, you should fetch and use Keycloak's public key
-        $parts = explode('.', $idToken);
-        if (count($parts) !== 3) {
-            throw new \RuntimeException("Invalid ID token format");
+        try {
+            $decoded = $this->authService->decodeToken($idToken);
+
+            return [
+                'id' => $decoded->sub ?? null,
+                'username' => $decoded->preferred_username ?? null,
+                'email' => $decoded->email ?? null,
+                'firstName' => $decoded->given_name ?? null,
+                'lastName' => $decoded->family_name ?? null,
+            ];
+        } catch (\Exception $e) {
+            throw new \RuntimeException("Invalid or unverified ID token");
         }
-
-        $payload = json_decode(base64_decode(strtr($parts[1], '-_', '+/')), true);
-
-        return [
-            'id' => $payload['sub'] ?? null,
-            'username' => $payload['preferred_username'] ?? null,
-            'email' => $payload['email'] ?? null,
-            'firstName' => $payload['given_name'] ?? null,
-            'lastName' => $payload['family_name'] ?? null,
-        ];
     }
 }

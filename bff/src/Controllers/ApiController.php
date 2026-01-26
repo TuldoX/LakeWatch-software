@@ -15,7 +15,6 @@ class ApiController
         $this->api = new ApiClient();
     }
 
-    // Proxy any /bff/api/* request
     public function proxy(
         ServerRequestInterface $request,
         ResponseInterface $response,

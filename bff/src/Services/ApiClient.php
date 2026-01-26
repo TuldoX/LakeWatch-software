@@ -13,14 +13,7 @@ class ApiClient
         $this->tokens = new TokenService();
     }
 
-    /**
-     * Forward request to backend API
-     */
-    public function forward(
-        string $method,
-        string $url,
-        ServerRequestInterface $request
-    ): ?array {
+    public function forward(string $method,string $url,ServerRequestInterface $request): ?array {
         $accessToken = $this->tokens->getValidAccessToken();
 
         if (!$accessToken) return null;
