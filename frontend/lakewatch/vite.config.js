@@ -13,17 +13,5 @@ export default defineConfig({
     alias: {
       '@': fileURLToPath(new URL('./src', import.meta.url))
     },
-  },
-  server: {
-    proxy: {
-      '/bff': {
-        target: 'http://app.lakewatch.com',
-        changeOrigin: true,
-      },
-      '/api': {
-        target: 'http://app.lakewatch.com',
-        changeOrigin: true,
-      },
-    },
-  },
+  }
 })

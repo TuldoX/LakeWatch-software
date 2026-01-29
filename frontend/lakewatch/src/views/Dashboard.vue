@@ -8,10 +8,7 @@
   const user = ref(null);
   const probes = ref([]);
 
-  onMounted(async () => {
     const authenticatedUser = await getMe();
-    if (!authenticatedUser) return;
-  
     user.value = authenticatedUser
     
     try {
@@ -29,7 +26,6 @@
     } catch (error) {
       console.error('Failed to fetch probes:', error);
     }
-  })
 </script>
 
 <template>

@@ -16,7 +16,6 @@ use Dotenv\Dotenv;
 $dotenv = Dotenv::createImmutable(__DIR__ . '/..');
 $dotenv->load();
 
-// Session configuration from environment
 $sessionSecure = getenv('SESSION_SECURE') === 'true' ? 1 : 0;
 
 ini_set('session.cookie_httponly', 1);
@@ -28,28 +27,6 @@ session_start();
 $containerBuilder = new ContainerBuilder();
 
 $containerBuilder->addDefinitions([
-    KeycloakService::class => function($c) {
-        return new KeycloakService(
-            $c->get(AuthService::class)
-        );
-    },
-    TokenService::class => function() {
-        return new TokenService();
-    },
-    ApiClient::class => function() {
-        return new ApiClient();
-    },
-    AuthController::class => function($c) {
-        return new AuthController(
-            $c->get(KeycloakService::class),
-            $c->get(TokenService::class)
-        );
-    },
-    ApiController::class => function($c) {
-        return new ApiController(
-            $c->get(ApiClient::class)
-        );
-    },
 
 ]);
 

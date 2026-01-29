@@ -47,13 +47,6 @@ export async function getProbes(userId) {
                 'Content-Type': 'application/json',
             },
         });
-
-        if (response.status === 401) {
-            localStorage.removeItem('user');
-            login();
-            return null;
-        }
-
         if (!response.ok) {
             throw new Error(`Failed to fetch probes: ${response.status}`);
         }
