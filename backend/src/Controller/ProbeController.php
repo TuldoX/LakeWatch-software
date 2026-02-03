@@ -64,7 +64,7 @@ class ProbeController {
             'batteryLife' => 'int',
             'temperature' => 'float',
             'tds' => 'int',
-            'oxygen' => 'int',
+            'oxygen' => 'float',
             'ph' => 'float'
         ];
 

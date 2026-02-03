@@ -38,7 +38,7 @@ class ProbeModel {
         }
     }
 
-    public function insertData(int $id, int $batteryLife, float $temperature, int $tds, int $oxygen, float $ph): bool {
+    public function insertData(int $id, int $batteryLife, float $temperature, int $tds, float $oxygen, float $ph): bool {
         try {
             $this->db->beginTransaction();
             
