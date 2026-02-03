@@ -8,16 +8,17 @@
   const user = ref(null);
   const probes = ref([]);
 
-    const authenticatedUser = await getMe();
-    user.value = authenticatedUser
-    
+  onMounted(async () => {
     try {
-      const userId = user.value.id
+      const authenticatedUser = await getMe();
+      user.value = authenticatedUser;
+
+      const userId = user.value.user.sub;
       console.log('Fetching probes for user:', userId);
-      
+
       const probesData = await getProbes(userId);
       console.log('Probes data:', probesData);
-      
+
       if (probesData) {
         probes.value = probesData;
         localStorage.setItem('probes', JSON.stringify(probesData));
@@ -26,6 +27,7 @@
     } catch (error) {
       console.error('Failed to fetch probes:', error);
     }
+  });
 </script>
 
 <template>

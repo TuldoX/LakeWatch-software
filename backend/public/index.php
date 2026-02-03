@@ -23,10 +23,10 @@ $containerBuilder->addDefinitions([
     AuthService::class => function() {
         return new AuthService();
     },
-     ProbeModel::class => function($c) {
+    ProbeModel::class => function($c) {
         return new ProbeModel($c->get(Database::class));
     },
-     UserModel::class => function($c) {
+    UserModel::class => function($c) {
         return new UserModel($c->get(Database::class));
     },
     ProbeController::class => function($c) {
