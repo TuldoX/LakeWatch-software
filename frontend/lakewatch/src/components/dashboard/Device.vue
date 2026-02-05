@@ -1,49 +1,81 @@
 <script setup>
-  import { ref } from 'vue'
+import { computed } from "vue"
 
-  const progress = ref(75) // percentage (0–100)
+const props = defineProps({
+  battery: Number,
+  deviceName: String,
+  location: String,
+  time: String
+})
+
+function parseTime(str) {
+  const match = str.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.(\d+)([+-]\d+)?$/)
+  if (!match) return new Date(NaN)
+
+  let [_, datetime, fraction, tz] = match
+  fraction = fraction.slice(0, 3).padEnd(3, "0")
+  tz = tz ? (tz.length === 3 ? tz + ":00" : tz) : "Z"
+
+  return new Date(`${datetime}.${fraction}${tz}`.replace(" ", "T"))
+}
+
+const parsedDate = computed(() => parseTime(props.time))
+
+const isRecent = computed(() => {
+  const diff = Date.now() - parsedDate.value.getTime()
+  return diff >= 0 && diff <= 60 * 60 * 1000
+})
+
+const formattedDate = computed(() =>
+  parsedDate.value.toLocaleDateString("en-US", {
+    month: "short",
+    day: "numeric"
+  })
+)
 </script>
+
 <template>
   <router-link to="/device">
-  <div class="container-surface">
-    <div class="top-row">
-      <div class="device-name">
-        <div id="device-image-wrapper">
-          <img src="../../assets/icons/device.png" id="device-image">
+    <div class="container-surface">
+      <div class="top-row">
+        <div class="device-name">
+          <div id="device-image-wrapper">
+            <img src="../../assets/icons/device.png" id="device-image" />
+          </div>
+          <h2 class="text-secondary">{{ deviceName }}</h2>
         </div>
-        <h2 class="text-secondary">AXIOM V1</h2>
+        <div :class="{ connected: isRecent, disconnected: !isRecent }"></div>
       </div>
-      <div class="connected"></div>
-    </div>
 
-    <div id="location">
-      <img src="../../assets/icons/location.png" id="location-image">
-      <p id="location-name">Test location</p>
-    </div>
+      <div id="location">
+        <img src="../../assets/icons/location.png" id="location-image" />
+        <p id="location-name">{{ location }}</p>
+      </div>
 
-    <hr class="solid">
+      <hr class="solid" />
 
-    <div id="battery-life">
+      <div id="battery-life">
         <div class="helper">
-          <img src="../../assets/icons/battery.png" id="battery-image">
-          <p id="battery-percentage">75%</p>
+          <img src="../../assets/icons/battery.png" id="battery-image" />
+          <p id="battery-percentage">{{ battery }}%</p>
         </div>
+
         <div class="progress-bar">
           <div
             class="progress-fill"
-            :style="{ width: progress + '%' }"
+            :style="{ width: battery + '%' }"
           ></div>
         </div>
-    </div>
+      </div>
 
-    <div id="time">
-      <div class="helper helper-extender">
-        <img src="../../assets/icons/time.png" id="time-image">
-        <p id="time-text">Aug 31</p>
+      <div id="time">
+        <div class="helper helper-extender">
+          <img src="../../assets/icons/time.png" id="time-image" />
+          <p id="time-text">{{ formattedDate }}</p>
+        </div>
       </div>
     </div>
-  </div>
-</router-link>
+  </router-link>
 </template>
 <style scoped>
     #device-image {
@@ -72,6 +104,14 @@
     .connected {
       box-shadow: 0px 0px 7px 3px rgba(var(--success-rgb), 0.5);
       background-color: rgb(var(--success-rgb));
+      width: 0.75rem;
+      height: 0.75rem;
+      border-radius: 50%;
+      margin-right: 1rem;
+    }
+
+    .disconnected {
+      background-color: rgb(var(--offline));
       width: 0.75rem;
       height: 0.75rem;
       border-radius: 50%;

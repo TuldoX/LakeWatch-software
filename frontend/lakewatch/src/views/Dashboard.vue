@@ -1,50 +1,55 @@
 <script setup>
-  import { onMounted, ref } from 'vue'
-  import Search from '../components/dashboard/Search.vue'
-  import Device from '../components/dashboard/Device.vue'
-  import Navigation from '@/components/Navigation.vue'
-  import { getMe, getProbes } from '@/services/apiService.js'
+import { onMounted, ref } from 'vue'
+import Search from '../components/dashboard/Search.vue'
+import Device from '../components/dashboard/Device.vue'
+import Navigation from '@/components/Navigation.vue'
+import { getMe, getProbes } from '@/services/apiService.js'
 
-  const user = ref(null);
-  const probes = ref([]);
+const user = ref(null)
+const probes = ref([])
 
-  onMounted(async () => {
-    try {
-      const authenticatedUser = await getMe();
-      user.value = authenticatedUser;
+onMounted(async () => {
+  try {
+    const authenticatedUser = await getMe()
+    user.value = authenticatedUser
+    const userId = user.value.user.sub
 
-      const userId = user.value.user.sub;
-      console.log('Fetching probes for user:', userId);
+    const probesData = await getProbes(userId)
 
-      const probesData = await getProbes(userId);
-      console.log('Probes data:', probesData);
-
-      if (probesData) {
-        probes.value = probesData;
-        localStorage.setItem('probes', JSON.stringify(probesData));
-        console.log('Probes saved to localStorage');
-      }
-    } catch (error) {
-      console.error('Failed to fetch probes:', error);
+    if (probesData) {
+      probes.value = probesData
+      console.log(probesData)
+      console.log('Probes saved to localStorage')
     }
-  });
+  } catch (error) {
+    console.error('Failed to fetch probes:', error)
+  }
+})
 </script>
 
 <template>
   <div class="page-container">
     <div class="page-header">
-    <h1 class="page-title">Probes</h1>
-    <div class="search-wrapper">
-      <Search />
+      <h1 class="page-title">Probes</h1>
+      <div class="search-wrapper">
+        <Search />
+      </div>
     </div>
-  </div>
+
     <div class="device-wrapper">
-      <Device/>
+      <Device
+        v-for="probe in probes"
+        :key="probe.probe_id"
+        :battery="probe.battery_life"
+        :deviceName="probe.probe_name"
+        :location="probe.location_name"
+        :time="probe.lst_data"
+      />
     </div>
+
     <Navigation/>
   </div>
 </template>
-
 <style scoped>
   .search-wrapper {
     display: flex;
