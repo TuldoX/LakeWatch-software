@@ -7,6 +7,7 @@ use DI\ContainerBuilder;
 use App\Controller\AuthController;
 use App\Controller\ApiController;
 use Dotenv\Dotenv;
+use App\Service\KeycloakService;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
 
@@ -28,12 +29,13 @@ session_start();
 $containerBuilder = new ContainerBuilder();
 
 $containerBuilder->addDefinitions([
-    AuthController::class => function() {
+    AuthController::class => function($c) {
         return new AuthController();
     },
-    ApiController::class => function() {
-        return new ApiController();
-    }
+    ApiController::class => function($c) {
+        return new ApiController(new KeycloakService());
+    },
+    // or better – let PHP-DI autowire KeycloakService if you register it
 ]);
 
 $container = $containerBuilder->build();

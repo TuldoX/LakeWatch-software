@@ -40,6 +40,7 @@ onMounted(async () => {
       <Device
         v-for="probe in probes"
         :key="probe.probe_id"
+        :probeId="probe.probe_id"
         :battery="probe.battery_life"
         :deviceName="probe.probe_name"
         :location="probe.location_name"

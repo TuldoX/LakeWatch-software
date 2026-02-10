@@ -1,4 +1,9 @@
-<script></script>
+<script setup>
+const props = defineProps({
+  lastUpdated: String,
+  location: String
+});
+</script>
 <template>
     <div class="container-surface">
         <div class="h2-info-container">
@@ -10,12 +15,12 @@
                 <img src="../../assets/icons/calendar.png" class="info-icon">
                 <p class="secondary">Last sync</p>
             </div>
-            <p class="secondary-bold">2 min ago</p>
+            <p class="secondary-bold">{{ lastUpdated }}</p>
             <div class="info-row">
                 <img src="../../assets/icons/location-small.png" class="info-icon">
                 <p class="secondary">Location</p>
             </div>
-            <p class="secondary-bold">Test location</p>
+            <p class="secondary-bold">{{ location }}</p>
         </div>
     </div>
 </template>

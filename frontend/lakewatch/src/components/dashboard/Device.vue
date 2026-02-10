@@ -1,12 +1,16 @@
 <script setup>
 import { computed } from "vue"
+import { useRouter } from 'vue-router';
 
 const props = defineProps({
   battery: Number,
   deviceName: String,
   location: String,
-  time: String
+  time: String,
+  probeId: String
 })
+
+const router = useRouter();
 
 function parseTime(str) {
   const match = str.match(/^(\d{4}-\d{2}-\d{2} \d{2}:\d{2}:\d{2})\.(\d+)([+-]\d+)?$/)
@@ -32,10 +36,21 @@ const formattedDate = computed(() =>
     day: "numeric"
   })
 )
+
+function handleDeviceClick() {
+  router.push({
+    path: '/device',
+    query: {
+      probe_id: props.probeId,
+      device_name: props.deviceName,
+      location: props.location
+    }
+  });
+}
 </script>
 
 <template>
-  <router-link to="/device">
+  <router-link to="/device" @click.native.prevent="handleDeviceClick">
     <div class="container-surface">
       <div class="top-row">
         <div class="device-name">

@@ -57,3 +57,22 @@ export async function getProbes(userId) {
         throw error;
     }
 }
+
+export async function getData(probeId) {
+    try {
+        const response = await fetch(`/bff/api/probes/${probeId}/data?hours=24`,{
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.log('getData error:',error);
+        throw error;
+    }
+}

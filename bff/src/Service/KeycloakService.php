@@ -3,6 +3,7 @@
 namespace App\Service;
 
 use GuzzleHttp\Client;
+use GuzzleHttp\Exception\RequestException;
 
 class KeycloakService
 {
@@ -61,4 +62,37 @@ class KeycloakService
 
         return json_decode((string)$response->getBody(), true);
     }
+    public function refreshToken(string $refreshToken): array
+    {
+        try {
+            $response = $this->client->post(
+                '/realms/' . $_ENV['KEYCLOAK_REALM'] . '/protocol/openid-connect/token',
+                [
+                    'form_params' => [
+                        'grant_type'    => 'refresh_token',
+                        'client_id'     => $_ENV['KEYCLOAK_CLIENT_ID'],
+                        'client_secret' => $_ENV['KEYCLOAK_CLIENT_SECRET'],
+                        'refresh_token' => $refreshToken,
+                        // 'redirect_uri' is usually NOT needed for refresh_token grant
+                    ],
+                ]
+            );
+
+            return json_decode((string)$response->getBody(), true);
+        } catch (RequestException $e) {
+            $response = $e->getResponse();
+            if ($response) {
+                $errorBody = json_decode((string)$response->getBody(), true);
+                throw new \Exception('Token refresh failed: ' . ($errorBody['error_description'] ?? $e->getMessage()));
+            }
+            throw $e;
+        }
+    }
+
+    // Optional helper: check if token is expired/expiring soon
+    public static function isTokenExpiringSoon(int $expiresAt, int $thresholdSeconds = 120): bool
+    {
+        return time() > ($expiresAt - $thresholdSeconds);
+    }
+
 }

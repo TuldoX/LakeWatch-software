@@ -42,7 +42,7 @@ class ProbeController {
         {
             $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(403);
+                            ->withStatus(401);
         }
 
         try {
@@ -109,7 +109,7 @@ class ProbeController {
         if (!$this->authService->isAuthenticated($token)) {
             $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(403);
+                            ->withStatus(401);
         }
 
         $id = $args['id'];
