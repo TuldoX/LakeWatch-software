@@ -62,37 +62,46 @@ class KeycloakService
 
         return json_decode((string)$response->getBody(), true);
     }
-    public function refreshToken(string $refreshToken): array
+
+    public function refreshToken(string $refreshToken, array &$session): array
     {
         try {
+            $formParams = [
+                'grant_type'    => 'refresh_token',
+                'client_id'     => $_ENV['KEYCLOAK_CLIENT_ID'],
+                'client_secret' => $_ENV['KEYCLOAK_CLIENT_SECRET'],
+                'refresh_token' => $refreshToken,
+            ];
+
+            if (!empty($session['id_token'])) {
+                $formParams['id_token_hint'] = $session['id_token'];
+            }
+
             $response = $this->client->post(
                 '/realms/' . $_ENV['KEYCLOAK_REALM'] . '/protocol/openid-connect/token',
-                [
-                    'form_params' => [
-                        'grant_type'    => 'refresh_token',
-                        'client_id'     => $_ENV['KEYCLOAK_CLIENT_ID'],
-                        'client_secret' => $_ENV['KEYCLOAK_CLIENT_SECRET'],
-                        'refresh_token' => $refreshToken,
-                        // 'redirect_uri' is usually NOT needed for refresh_token grant
-                    ],
-                ]
+                ['form_params' => $formParams]
             );
 
-            return json_decode((string)$response->getBody(), true);
+            $tokens = json_decode((string)$response->getBody(), true);
+
+            if (!empty($tokens['id_token'])) {
+                $session['id_token'] = $tokens['id_token'];
+            }
+
+            return $tokens;
+
         } catch (RequestException $e) {
             $response = $e->getResponse();
+            $errorDetail = $e->getMessage();
+
             if ($response) {
-                $errorBody = json_decode((string)$response->getBody(), true);
-                throw new \Exception('Token refresh failed: ' . ($errorBody['error_description'] ?? $e->getMessage()));
+                $body = (string)$response->getBody();
+                $errorBody = json_decode($body, true);
+                $errorDetail = $errorBody['error_description'] ?? $body;
             }
-            throw $e;
+
+            error_log("Refresh token failed: " . $errorDetail);
+            throw new \Exception("Token refresh failed: " . $errorDetail);
         }
     }
-
-    // Optional helper: check if token is expired/expiring soon
-    public static function isTokenExpiringSoon(int $expiresAt, int $thresholdSeconds = 120): bool
-    {
-        return time() > ($expiresAt - $thresholdSeconds);
-    }
-
 }

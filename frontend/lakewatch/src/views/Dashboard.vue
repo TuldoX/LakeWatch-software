@@ -18,8 +18,6 @@ onMounted(async () => {
 
     if (probesData) {
       probes.value = probesData
-      console.log(probesData)
-      console.log('Probes saved to localStorage')
     }
   } catch (error) {
     console.error('Failed to fetch probes:', error)

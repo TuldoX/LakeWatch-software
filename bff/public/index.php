@@ -61,6 +61,7 @@ $app->add(function (Request $request, $handler) {
 $app->get('/auth/login', [AuthController::class, 'login']);
 $app->get('/auth/callback', [AuthController::class, 'callback']);
 $app->get('/auth/me', [AuthController::class, 'me']);
+$app->get('/auth/logout', [AuthController::class, 'logout']);
 $app->any('/api/{path:.*}', [ApiController::class, 'proxy']);
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function (Request $request, Response $response) {

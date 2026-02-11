@@ -44,8 +44,7 @@ class ApiController
                         'Accept'        => 'application/json',
                     ],
                     'query' => $request->getQueryParams(),
-                    'body'  => $request->getBody()->getContents(), // careful: body can only be read once
-                    // Tip: if you need to support large/multipart bodies → read once before loop
+                    'body'  => $request->getBody()->getContents(), // note: body readable only once
                 ]);
 
                 $response->getBody()->write((string)$apiResponse->getBody());
@@ -57,36 +56,37 @@ class ApiController
             } catch (RequestException $e) {
                 $apiResp = $e->getResponse();
 
-                if ($apiResp && $apiResp->getStatusCode() === 401 && $attempts < $maxAttempts) {
-                    // Try to refresh token
+                // Try refresh on 401 or sometimes 403 (API-dependent)
+                if ($apiResp && in_array($apiResp->getStatusCode(), [401, 403]) && $attempts < $maxAttempts) {
                     if (empty($_SESSION['refresh_token'])) {
-                        break; // no refresh token → give up
+                        error_log("No refresh token available for retry");
+                        break;
                     }
 
                     try {
-                        $newTokens = $this->keycloak->refreshToken($_SESSION['refresh_token']);
+                        // Pass $_SESSION by reference so refreshToken can read/write id_token
+                        $newTokens = $this->keycloak->refreshToken($_SESSION['refresh_token'], $_SESSION);
 
-                        // Update session
-                        session_regenerate_id(true); // good practice after credential change
+                        session_regenerate_id(true);
 
                         $_SESSION['access_token']  = $newTokens['access_token'];
                         $_SESSION['refresh_token'] = $newTokens['refresh_token'] ?? $_SESSION['refresh_token'];
                         $_SESSION['expires_at']    = time() + $newTokens['expires_in'];
 
-                        // Optional: refresh userinfo too
+                        // Refresh userinfo
                         $userInfo = $this->keycloak->getUserInfo($newTokens['access_token']);
                         $_SESSION['user'] = $userInfo;
 
-                        // Continue to retry the request with new token
-                        continue;
+                        error_log("Token refreshed successfully");
+
+                        continue; // retry API call with new token
                     } catch (\Exception $refreshEx) {
-                        // Refresh failed → log it, but continue to return 401
                         error_log("Token refresh failed: " . $refreshEx->getMessage());
                         break;
                     }
                 }
 
-                // Other errors or refresh failed
+                // Other errors
                 $errorMessage = $apiResp
                     ? (string)$apiResp->getBody()
                     : $e->getMessage();
@@ -98,7 +98,6 @@ class ApiController
             }
         }
 
-        // All attempts failed
         return $this->jsonResponse($response, ['error' => 'Unauthorized - token refresh failed'], 401);
     }
 
