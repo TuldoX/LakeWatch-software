@@ -32,4 +32,24 @@ class UserModel {
             throw new \Exception('Database query failed: ' . $e->getMessage());
         }
     }
+
+    public function getNotifications(string $id){
+        try {
+            $stmt = $this->db->prepare(''); //TODO: query dorobiť
+            $stmt->execute(['user_id' => $id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new \Exception('Database query failed: ' . $e->getMessage());
+        }
+    }
+
+    public function getNews(string $id){
+        try {
+            $stmt = $this->db->prepare(''); //TODO: query dorobiť
+            $stmt->execute(['user_id' => $id]);
+            return $stmt->fetchAll(PDO::FETCH_ASSOC);
+        } catch (PDOException $e) {
+            throw new \Exception('Database query failed: ' . $e->getMessage());
+        }
+    }
 }

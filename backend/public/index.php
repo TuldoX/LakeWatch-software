@@ -1,11 +1,13 @@
 <?php
 require __DIR__ . '/../vendor/autoload.php';
 
+use App\Controller\NotificationsController;
 use Slim\Factory\AppFactory;
 use App\Controller\ProbeController;
 use App\Controller\UserController;
 use App\Database\Database;
 use App\Service\AuthService;
+use App\Service\NotificationModel;
 use App\Service\ProbeModel;
 use App\Service\UserModel;
 use Dotenv\Dotenv;
@@ -29,6 +31,9 @@ $containerBuilder->addDefinitions([
     UserModel::class => function($c) {
         return new UserModel($c->get(Database::class));
     },
+    NotificationModel::class => function($c){
+        return new NotificationModel($c->get(Database::class));
+    },
     ProbeController::class => function($c) {
         return new ProbeController(
             $c->get(ProbeModel::class),
@@ -38,6 +43,12 @@ $containerBuilder->addDefinitions([
     UserController::class => function($c){
         return new UserController(
             $c->get(UserModel::class),
+            $c->get(AuthService::class)
+        );
+    },
+    NotificationsController::class => function($c){
+        return new NotificationsController(
+            $c->get(NotificationModel::class),
             $c->get(AuthService::class)
         );
     }
@@ -65,6 +76,9 @@ $app->addBodyParsingMiddleware();
 $app->post('/data', [ProbeController::class, 'postData']);
 $app->get('/users/{id}/probes',[UserController::class,'getProbes']);
 $app->get('/probes/{id}/data',[ProbeController::class,'getData']);
+$app->get('/users/{id}/notifications',[UserController::class,'getNotifications']);
+$app->get('users/{id}/news',[UserController::class,'getNews']);
+$app->delete('/notifications/{id}',[NotificationsController::class,'markRead']);
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {
     $response->getBody()->write(json_encode('Route not found'));
