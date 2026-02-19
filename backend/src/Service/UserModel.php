@@ -35,7 +35,10 @@ class UserModel {
 
     public function getNotifications(string $id){
         try {
-            $stmt = $this->db->prepare(''); //TODO: query dorobiť
+            $stmt = $this->db->prepare('
+                SELECT
+                    //TODO: dorobit
+            ');
             $stmt->execute(['user_id' => $id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {
@@ -45,7 +48,14 @@ class UserModel {
 
     public function getNews(string $id){
         try {
-            $stmt = $this->db->prepare(''); //TODO: query dorobiť
+            $stmt = $this->db->prepare('
+                SELECT EXISTS (
+                SELECT 1 
+                FROM notifications
+                WHERE user_id = :user_id
+                LIMIT 1
+            );
+            ');
             $stmt->execute(['user_id' => $id]);
             return $stmt->fetchAll(PDO::FETCH_ASSOC);
         } catch (PDOException $e) {

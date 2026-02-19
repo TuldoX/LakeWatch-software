@@ -92,6 +92,11 @@ class ProbeController {
                             ->withStatus(400);
         }
 
+        //TODO: notification check
+        if($fields['temperature'] > 25.0){
+            $this->probeModel->createNotification()
+        }
+
         if(!$this->probeModel->insertData($id,$batteryLife,$temperature,$tds,$oxygen,$ph)){
             $response->getBody()->write(json_encode(['error' => 'Database operation failed']));
             return $response->withHeader('Content-Type', 'application/json')
