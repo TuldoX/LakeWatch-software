@@ -9,18 +9,40 @@ const user = ref(null)
 const probes = ref([])
 
 onMounted(async () => {
-  try {
-    const authenticatedUser = await getMe()
-    user.value = authenticatedUser
-    const userId = user.value.user.sub
-
-    const probesData = await getProbes(userId)
-
-    if (probesData) {
-      probes.value = probesData
+  const cached = localStorage.getItem('user')
+  if (cached) {
+    try {
+      const parsed = JSON.parse(cached)
+      user.value = parsed
+    } catch (err) {
+      localStorage.removeItem('user')
     }
-  } catch (error) {
-    console.error('Failed to fetch probes:', error)
+  }
+
+  if (!user.value) {
+    try {
+      const authenticatedUser = await getMe()
+      if (authenticatedUser) {
+        user.value = authenticatedUser
+      } else {
+        return
+      }
+    } catch (err) {
+      console.error('Critical error during initial auth fetch', err)
+      return
+    }
+  }
+
+  if (user.value?.user?.sub) {
+    try {
+      const userId = user.value.user.sub
+      const probesData = await getProbes(userId)
+      if (probesData) {
+        probes.value = probesData
+      }
+    } catch (err) {
+      console.error('Failed to fetch probes:', err)
+    }
   }
 })
 </script>

@@ -43,16 +43,6 @@ COPY --from=composer:latest /usr/bin/composer /usr/local/bin/composer
 # ============================================
 FROM base AS development
 
-## Install and enable xdebug
-RUN pecl install xdebug \
-    && docker-php-ext-enable xdebug
-
-## Configure Xdebug for development
-RUN echo "xdebug.mode=develop,debug" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.start_with_request=yes" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.client_host=host.docker.internal" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini \
-    && echo "xdebug.client_port=9003" >> /usr/local/etc/php/conf.d/docker-php-ext-xdebug.ini
-
 ## PHP development settings
 RUN echo "display_errors=On" >> /usr/local/etc/php/conf.d/dev.ini \
     && echo "error_reporting=E_ALL" >> /usr/local/etc/php/conf.d/dev.ini \
