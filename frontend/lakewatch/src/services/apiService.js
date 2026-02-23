@@ -76,3 +76,41 @@ export async function getData(probeId) {
         throw error;
     }
 }
+
+export async function getNotifications(id){
+    try {
+        const response = await fetch(`/bff/api/users/${id}/notifications`,{
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.log('getData error:',error);
+        throw error;
+    }
+}
+
+export async function deleteNotifications(id){
+    try {
+        const response = await fetch(`/bff/api/notifications/${id}`,{
+            method: 'DELETE',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if (!response.ok) {
+            throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.log('getData error:',error);
+        throw error;
+    }
+}

@@ -1,17 +1,39 @@
 <script setup>
   import Navigation from '@/components/Navigation.vue';
-  import Notification from '@/components/notifications/Notification.vue';
+  import { ref, onMounted } from 'vue'
+  import Notification from '@/components/notifications/Notification.vue'
+  import { getNotifications } from '@/services/apiService'
+
+  const notifications = ref([])
+  const user = JSON.parse(localStorage.getItem('user'))
+
+  async function loadNotifications() {
+    try {
+      notifications.value = await getNotifications(user.user.sub)
+    } catch (error) {
+      console.error('Failed to load notifications:', error)
+    }
+  }
+
+  onMounted(() => {
+    loadNotifications()
+  })
+
 </script>
 <template>
   <div class="page-container">
     <h1 class="page-title">Notifications</h1>
     <Notification
-      type="information"
-      heading="Temperature sensor disconnected"
-      message="The temperature sensor has disconnected. Check the device."
-      device="Axiom V1"
-      location="Test location"
-      time="2026-02-14 16:05:32.123456+00"
+        v-for="notification in notifications"
+        :key="notification.id"
+        :id="notification.id"
+        :heading="notification.heading"
+        :message="notification.message"
+        :type="notification.type"
+        :device="notification.probe"          
+        :location="notification.location"
+        :time="notification.time"
+        @deleted="loadNotifications"
     />
   </div>
   <Navigation/>

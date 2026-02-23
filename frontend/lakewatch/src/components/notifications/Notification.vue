@@ -1,5 +1,6 @@
 <script setup>
 import { computed } from 'vue'
+import {deleteNotifications} from "@/services/apiService.js";
 
 const props = defineProps({
   heading: String,
@@ -10,6 +11,8 @@ const props = defineProps({
   time: String,
   id: String
 })
+
+const emit = defineEmits(['deleted'])
 
 const formattedTime = computed(() => {
   if (!props.time) return '—'
@@ -29,6 +32,15 @@ const formattedTime = computed(() => {
   if (diffDays < 30)        return `${diffDays} ${diffDays === 1 ? 'day' : 'days'} ago`
   return past.toLocaleDateString()
 })
+
+async function handleDelete() {
+  try {
+    await deleteNotifications(props.id)
+    emit('deleted', props.id)         
+  } catch (error) {
+    console.error('Failed to delete notification:', error)
+  }
+}
 </script>
 
 <template>
@@ -55,7 +67,7 @@ const formattedTime = computed(() => {
 
       <h3 class="heading">{{ heading }}</h3>
 
-      <button class="close-btn">
+      <button class="close-btn" @click="handleDelete">
         <img src="@/assets/icons/delete.png" alt="close" />
       </button>
     </div>
@@ -133,7 +145,7 @@ const formattedTime = computed(() => {
 .meta-row {
   display: flex;
   align-items: center;
-  gap: 0.75rem;
+  gap: 0.4rem;
   flex-wrap: wrap;
 }
 
@@ -145,7 +157,7 @@ const formattedTime = computed(() => {
   height: 1.375rem;
   background: linear-gradient(to right, #1976d2, #42a5f5);
   border-radius: 10px;
-  padding: 0 0.5rem;
+  padding: 0 0.3rem;
 }
 
 .device-name {
@@ -167,6 +179,6 @@ const formattedTime = computed(() => {
   background: var(--text-secondary, #666);
   border-radius: 50%;
   display: inline-block;
-  margin: 0 0.4rem;
+  margin: 0 0.2rem;
 }
 </style>
