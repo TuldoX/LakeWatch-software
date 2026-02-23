@@ -37,7 +37,8 @@ $containerBuilder->addDefinitions([
     ProbeController::class => function($c) {
         return new ProbeController(
             $c->get(ProbeModel::class),
-            $c->get(AuthService::class)
+            $c->get(AuthService::class),
+            $c->get(NotificationModel::class),
         );
     },
     UserController::class => function($c){
@@ -77,7 +78,7 @@ $app->post('/data', [ProbeController::class, 'postData']);
 $app->get('/users/{id}/probes',[UserController::class,'getProbes']);
 $app->get('/probes/{id}/data',[ProbeController::class,'getData']);
 $app->get('/users/{id}/notifications',[UserController::class,'getNotifications']);
-$app->get('users/{id}/news',[UserController::class,'getNews']);
+$app->get('/users/{id}/news',[UserController::class,'getNews']);
 $app->delete('/notifications/{id}',[NotificationsController::class,'markRead']);
 
 $app->map(['GET', 'POST', 'PUT', 'DELETE', 'PATCH'], '/{routes:.+}', function ($request, $response) {

@@ -3,22 +3,27 @@ namespace App\Controller;
 
 use App\Service\AuthService;
 use App\Service\ProbeModel;
+use App\Service\NotificationModel;
 use Psr\Http\Message\ResponseInterface as Response;
 use Psr\Http\Message\ServerRequestInterface as Request;
-
 class ProbeController {
 
     private ProbeModel $probeModel;
     private AuthService $authService;
+    private NotificationModel $notificationModel;
 
-    public function __construct(ProbeModel $probeModel,AuthService $authService)
+    public function __construct(ProbeModel $probeModel,AuthService $authService,NotificationModel $notificationModel)
     {
         $this->probeModel = $probeModel;
         $this->authService = $authService;
+        $this->notificationModel = $notificationModel;
     }
 
+    /**
+     * @throws \Exception
+     */
     public function postData(Request $request, Response $response): Response
-    {    
+    {
         $data = $request->getParsedBody();
 
         $id = $data['id'] ?? null;
@@ -29,20 +34,20 @@ class ProbeController {
         $ph = $data['ph'] ?? null;
 
         $token = str_replace('Bearer ', '', $request->getHeaderLine('Authorization'));
-        
+
         try {
             $tokenValid = $this->probeModel->getToken($token, $id);
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode(['error' => 'Database error']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(500);
+                ->withStatus(500);
         }
-        
+
         if(!$tokenValid)
         {
             $response->getBody()->write(json_encode(['error' => 'Unauthorized']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(401);
+                ->withStatus(401);
         }
 
         try {
@@ -50,16 +55,17 @@ class ProbeController {
         } catch (\Exception $e) {
             $response->getBody()->write(json_encode(['error' => 'Database error']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(500);
+                ->withStatus(500);
         }
-        
+
         if(!$exists)
         {
             $response->getBody()->write(json_encode(['error' => 'Probe does not exist']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(404);
+                ->withStatus(404);
         }
 
+        // Initialize errors array
         $fields = [
             'batteryLife' => 'int',
             'temperature' => 'float',
@@ -69,7 +75,9 @@ class ProbeController {
         ];
 
         $errors = [];
+        $dataValidated = [];
 
+        // Validation
         foreach ($fields as $field => $type) {
             $value = $data[$field] ?? null;
             if (!isset($value)) {
@@ -82,29 +90,71 @@ class ProbeController {
             if ($type === 'float' && !is_numeric($value)) {
                 $errors[$field] = "$field must be a float";
             }
-            if ($type === 'int') $data[$field] = (int)$value;
-            if ($type === 'float') $data[$field] = (float)$value;
+            if ($type === 'int') $dataValidated[$field] = (int)$value;
+            if ($type === 'float') $dataValidated[$field] = (float)$value;
         }
 
         if (!empty($errors)) {
             $response->getBody()->write(json_encode(['errors' => $errors]));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(400);
+                ->withStatus(400);
         }
 
-        //TODO: notification check
-        if($fields['temperature'] > 25.0){
-            $this->probeModel->createNotification()
+        // Notification check
+        if($dataValidated['temperature'] > 25.0) {
+            $this->notificationModel->createNotification(
+                "warning",
+                "Temperature above 25°C",
+                "Temperature is too high. Oxygen will begin to decrease.",
+                $id
+            );
         }
 
-        if(!$this->probeModel->insertData($id,$batteryLife,$temperature,$tds,$oxygen,$ph)){
+        if($dataValidated['tds'] > 400) {
+            $this->notificationModel->createNotification(
+                "warning",
+                "TDS too high",
+                "Total dissolved solids too high. Water is too muddy.",
+                $id
+            );
+        }
+
+        if($dataValidated['oxygen'] < 5.0) {
+            $this->notificationModel->createNotification(
+                "error",
+                "Oxygen value critical",
+                "Oxygen value is under 5mg/L. Go check water immediately.",
+                $id
+            );
+        }
+
+        if($dataValidated['ph'] < 6.0) {
+            $this->notificationModel->createNotification(
+                "warning",
+                "pH value low",
+                "pH is under 6.0. Might be due to decomposition of organic matter. Check is recommended.",
+                $id
+            );
+        }
+
+        if($dataValidated['ph'] > 8.0) {
+            $this->notificationModel->createNotification(
+                "error",
+                "pH value too high",
+                "pH is above 8.0. Some chemicals may entered the water.",
+                $id
+            );
+        }
+
+        // Inserting data into the database
+        if(!$this->probeModel->insertData($id, $batteryLife, $temperature, $tds, $oxygen, $ph)){
             $response->getBody()->write(json_encode(['error' => 'Database operation failed']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(500);
+                ->withStatus(500);
         }
 
         return $response->withHeader('Content-Type', 'application/json')
-                        ->withStatus(200);
+            ->withStatus(200);
     }
 
     public function getData(Request $request,Response $response,array $args): Response

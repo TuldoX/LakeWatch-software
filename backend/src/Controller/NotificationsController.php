@@ -29,10 +29,11 @@ class NotificationsController{
 
         $id = $args['id'];
 
-        if (!Uuid::isValid($id)) {
-            $response->getBody()->write(json_encode(['error' => 'Invalid id format']));
+        // Check if the ID is a valid integer
+        if (!filter_var($id, FILTER_VALIDATE_INT)) {
+            $response->getBody()->write(json_encode(['error' => 'Invalid id format, expected integer']));
             return $response->withHeader('Content-Type', 'application/json')
-                            ->withStatus(400);
+                ->withStatus(400);
         }
 
         try {
