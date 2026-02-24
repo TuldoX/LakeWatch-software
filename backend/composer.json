@@ -22,5 +22,10 @@
     "post-autoload-dump": [
       "@php -r \"file_exists('public/.htaccess') || copy('public/.htaccess.example', 'public/.htaccess');\""
     ]
-  }
+  },
+  "config": {
+        "audit": {
+            "block-insecure": false
+        }
+    }
 }

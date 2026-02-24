@@ -61,9 +61,6 @@ FROM base AS production
 # Copy source files to image
 COPY --chown=www-data:www-data . /var/www/
 
-# Install dependencies without dev packages
-RUN composer install --no-dev --optimize-autoloader --no-interaction --no-progress
-
 ## PHP production settings
 RUN echo "display_errors=Off" >> /usr/local/etc/php/conf.d/prod.ini \
     && echo "error_reporting=E_ALL & ~E_DEPRECATED & ~E_STRICT" >> /usr/local/etc/php/conf.d/prod.ini \

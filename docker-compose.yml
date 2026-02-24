@@ -30,14 +30,15 @@ services:
   api:
     container_name: api
     build:
+      context: ./backend
       dockerfile: Dockerfile
-      target: development  # ← Use development stage
+      target: production  # ← Use development stage
     restart: unless-stopped
     expose:
       - "80"
     env_file: .env
-    volumes:
-      - ./backend:/var/www  # ← Mount entire backend directory
+    # volumes:
+    #   - ./backend:/var/www  # ← Mount entire backend directory
     depends_on:
       - postgres
     networks:
@@ -46,16 +47,17 @@ services:
 
   bff:
     build:
+      context: ./bff
       dockerfile: Dockerfile
-      target: development  # ← Use development stage
+      target: production  # ← Use development stage
     container_name: bff
     restart: unless-stopped
     depends_on:
       - api
     env_file:
       - .env
-    volumes:
-      - ./bff:/var/www  # ← Mount entire bff directory
+    # volumes:
+    #   - ./bff:/var/www  # ← Mount entire bff directory
     expose:
       - "80"
     networks:
