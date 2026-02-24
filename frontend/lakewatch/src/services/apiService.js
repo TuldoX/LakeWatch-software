@@ -114,3 +114,22 @@ export async function deleteNotifications(id){
         throw error;
     }
 }
+
+export async function getNews(id){
+    try {
+        const response = await fetch(`/bff/api/users/${id}/news`,{
+            method: 'GET',
+            credentials: 'include',
+            headers: {
+                'Content-Type': 'application/json',
+            },
+        });
+        if(!response.ok){
+            throw new Error(`Failed to fetch data: ${response.status}`);
+        }
+        return await response.json();
+    } catch (error) {
+        console.log('getNews error:',error);
+        throw error;
+    }
+}
