@@ -1,34 +1,41 @@
-// Use relative URLs for development (Vite will proxy them)
-// In production, URLs will go directly to app.lakewatch.com
-const urlBase = '';
+const urlBase = 'https://app.lakewatch.tech';
 
 export async function login() {
     window.location.href = `${urlBase}/bff/auth/login`;
 }
 
+// Central fetch wrapper that handles 401 for every request
+async function apiFetch(url, options = {}) {
+    const response = await fetch(url, {
+        method: 'GET',
+        credentials: 'include',
+        headers: {
+            'Content-Type': 'application/json',
+        },
+        ...options,
+    });
+
+    if (response.status === 401) {
+        localStorage.clear();
+        login();
+        return null;
+    }
+
+    if (!response.ok) {
+        throw new Error(`Request failed: ${response.status}`);
+    }
+
+    return response.json();
+}
+
 export async function getMe() {
     try {
-        const response = await fetch(`${urlBase}/bff/auth/me`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
+        const user = await apiFetch(`${urlBase}/bff/auth/me`);
 
-        if (!response.ok) {
-            if (response.status === 401) {
-                localStorage.clear();
-                login();
-                return null;
-            }
-            throw new Error(`Failed to fetch user: ${response.status}`);
+        if (user) {
+            localStorage.setItem('user', JSON.stringify(user));
         }
 
-        const user = await response.json();
-        
-        localStorage.setItem('user', JSON.stringify(user));
-        
         return user;
     } catch (error) {
         console.error('Error fetching user:', error);
@@ -40,18 +47,7 @@ export async function getMe() {
 
 export async function getProbes(userId) {
     try {
-        const response = await fetch(`/bff/api/users/${userId}/probes`, {
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch probes: ${response.status}`);
-        }
-
-        return await response.json();
+        return await apiFetch(`${urlBase}/bff/api/users/${userId}/probes`);
     } catch (error) {
         console.error('getProbes error:', error);
         throw error;
@@ -60,76 +56,38 @@ export async function getProbes(userId) {
 
 export async function getData(probeId) {
     try {
-        const response = await fetch(`/bff/api/probes/${probeId}/data?hours=24`,{
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        return await response.json();
+        return await apiFetch(`${urlBase}/bff/api/probes/${probeId}/data?hours=24`);
     } catch (error) {
-        console.log('getData error:',error);
+        console.error('getData error:', error);
         throw error;
     }
 }
 
-export async function getNotifications(id){
+export async function getNotifications(id) {
     try {
-        const response = await fetch(`/bff/api/users/${id}/notifications`,{
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        return await response.json();
+        return await apiFetch(`${urlBase}/bff/api/users/${id}/notifications`);
     } catch (error) {
-        console.log('getData error:',error);
+        console.error('getNotifications error:', error);
         throw error;
     }
 }
 
-export async function deleteNotifications(id){
+export async function deleteNotifications(id) {
     try {
-        const response = await fetch(`/bff/api/notifications/${id}`,{
+        return await apiFetch(`${urlBase}/bff/api/notifications/${id}`, {
             method: 'DELETE',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
         });
-        if (!response.ok) {
-            throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        return await response.json();
     } catch (error) {
-        console.log('getData error:',error);
+        console.error('deleteNotifications error:', error);
         throw error;
     }
 }
 
-export async function getNews(id){
+export async function getNews(id) {
     try {
-        const response = await fetch(`/bff/api/users/${id}/news`,{
-            method: 'GET',
-            credentials: 'include',
-            headers: {
-                'Content-Type': 'application/json',
-            },
-        });
-        if(!response.ok){
-            throw new Error(`Failed to fetch data: ${response.status}`);
-        }
-        return await response.json();
+        return await apiFetch(`${urlBase}/bff/api/users/${id}/news`);
     } catch (error) {
-        console.log('getNews error:',error);
+        console.error('getNews error:', error);
         throw error;
     }
 }
