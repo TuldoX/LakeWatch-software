@@ -17,7 +17,7 @@ export default defineConfig({
     proxy: {
       // Proxy /bff to app.lakewatch.tech/bff
       '/bff': {
-        target: 'http://app.lakewatch.tech',
+        target: 'https://app.lakewatch.tech',
         changeOrigin: true,
         rewrite: (path) => path.replace(/^\/bff/, '/bff'),
         secure: true,

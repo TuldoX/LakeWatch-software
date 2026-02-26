@@ -10,3 +10,4 @@
 /keycloak-db-data
 /frontend/dist
 /nginx/log
+/db-dumps
