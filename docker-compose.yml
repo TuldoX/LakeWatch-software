@@ -12,33 +12,18 @@ services:
       default:
         ipv4_address: ${DOCKER_NETWORK_DB_IP}
 
-  pgadmin:
-    container_name: pgadmin
-    image: dpage/pgadmin4:latest
-    restart: unless-stopped
-    env_file: .env
-    ports:
-      - "8088:80"
-    volumes:
-      - ./data/pgadmin:/var/lib/pgadmin
-    depends_on:
-      - postgres
-    networks:
-      default:
-        ipv4_address: ${DOCKER_NETWORK_PGADMIN_IP}
-
   api:
     container_name: api
     build:
       context: ./backend
       dockerfile: Dockerfile
-      target: production  # ← Use development stage
+      target: production
     restart: unless-stopped
     expose:
       - "80"
     env_file: .env
-    # volumes:
-    #   - ./backend:/var/www  # ← Mount entire backend directory
+    volumes:
+      - ./backend:/var/www
     depends_on:
       - postgres
     networks:
@@ -47,17 +32,17 @@ services:
 
   bff:
     build:
-      context: ./bff
+      context: .
       dockerfile: Dockerfile
-      target: production  # ← Use development stage
+      target: production
     container_name: bff
     restart: unless-stopped
     depends_on:
       - api
     env_file:
       - .env
-    # volumes:
-    #   - ./bff:/var/www  # ← Mount entire bff directory
+    volumes:
+      - ./bff:/var/www
     expose:
       - "80"
     networks:
@@ -76,9 +61,6 @@ services:
       - ./nginx/config:/etc/nginx/conf.d/
       - ./nginx/log/:/var/log/nginx/
       - ./frontend/dist:/usr/share/nginx/html
-    ports:
-      - "80:80"
-      # - "443:443"
     networks:
       default:
         ipv4_address: ${DOCKER_NETWORK_PROXY_IP}
@@ -126,6 +108,16 @@ services:
     networks:
       default:
         ipv4_address: ${DOCKER_NETWORK_KEYCLOAK_IP}
+
+  cloudflared:
+    image: cloudflare/cloudflared:latest
+    container_name: cloudflared
+    restart: unless-stopped
+    command: tunnel --no-autoupdate run --token ${CLOUDFLARE_TUNNEL_TOKEN}
+    env_file: .env
+    networks:
+      default:
+        ipv4_address: ${DOCKER_NETWORK_TUNNEL_IP}
 
 networks:
   default:
