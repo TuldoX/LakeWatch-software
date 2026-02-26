@@ -16,7 +16,7 @@ class ApiController
     public function __construct(KeycloakService $keycloak)
     {
         $this->keycloak = $keycloak;
-        $this->client = new Client([
+        $this->client   = new Client([
             'base_uri' => rtrim($_ENV['API_BASE_URL'], '/'),
             'timeout'  => 15,
         ]);
@@ -25,17 +25,26 @@ class ApiController
     public function proxy(ServerRequestInterface $request, ResponseInterface $response, array $args): ResponseInterface
     {
         if (empty($_SESSION['access_token'])) {
+            error_log("Proxy - no access token in session");
             return $this->jsonResponse($response, ['error' => 'Unauthorized'], 401);
         }
 
-        $path   = $args['path'] ?? '';
-        $method = $request->getMethod();
+        // Proactively refresh before making the request if token is expired
+        if (AuthController::refreshIfNeeded() === false) {
+            error_log("Proxy - proactive refresh failed");
+            return $this->jsonResponse($response, ['error' => 'Unauthorized - session expired'], 401);
+        }
 
-        $attempts = 0;
+        $path    = $args['path'] ?? '';
+        $method  = $request->getMethod();
+        $body    = $request->getBody()->getContents(); // read once here
+        $attempts    = 0;
         $maxAttempts = 2;
 
         while ($attempts < $maxAttempts) {
             $attempts++;
+
+            error_log("Proxy attempt $attempts - calling API: $method /$path with token ending: " . substr($_SESSION['access_token'], -10));
 
             try {
                 $apiResponse = $this->client->request($method, '/' . $path, [
@@ -44,7 +53,7 @@ class ApiController
                         'Accept'        => 'application/json',
                     ],
                     'query' => $request->getQueryParams(),
-                    'body'  => $request->getBody()->getContents(), // note: body readable only once
+                    'body'  => $body,
                 ]);
 
                 $response->getBody()->write((string)$apiResponse->getBody());
@@ -54,47 +63,33 @@ class ApiController
                     ->withHeader('Content-Type', $apiResponse->getHeaderLine('Content-Type'));
 
             } catch (RequestException $e) {
-                $apiResp = $e->getResponse();
+                $apiResp   = $e->getResponse();
+                $errorCode = $apiResp ? $apiResp->getStatusCode() : 0;
 
-                // Try refresh on 401 or sometimes 403 (API-dependent)
-                if ($apiResp && in_array($apiResp->getStatusCode(), [401, 403]) && $attempts < $maxAttempts) {
-                    if (empty($_SESSION['refresh_token'])) {
-                        error_log("No refresh token available for retry");
-                        break;
+                error_log("Proxy attempt $attempts failed with status: $errorCode");
+
+                // On 401 from the API, force a token refresh and retry once
+                if ($errorCode === 401 && $attempts < $maxAttempts) {
+                    error_log("API returned 401 - forcing token refresh");
+
+                    // Force expires_at to 0 so refreshIfNeeded always attempts refresh
+                    $_SESSION['expires_at'] = 0;
+
+                    if (AuthController::refreshIfNeeded() === false) {
+                        error_log("Forced refresh failed - session destroyed");
+                        return $this->jsonResponse($response, ['error' => 'Unauthorized - token refresh failed'], 401);
                     }
 
-                    try {
-                        // Pass $_SESSION by reference so refreshToken can read/write id_token
-                        $newTokens = $this->keycloak->refreshToken($_SESSION['refresh_token'], $_SESSION);
-
-                        session_regenerate_id(true);
-
-                        $_SESSION['access_token']  = $newTokens['access_token'];
-                        $_SESSION['refresh_token'] = $newTokens['refresh_token'] ?? $_SESSION['refresh_token'];
-                        $_SESSION['expires_at']    = time() + $newTokens['expires_in'];
-
-                        // Refresh userinfo
-                        $userInfo = $this->keycloak->getUserInfo($newTokens['access_token']);
-                        $_SESSION['user'] = $userInfo;
-
-                        error_log("Token refreshed successfully");
-
-                        continue; // retry API call with new token
-                    } catch (\Exception $refreshEx) {
-                        error_log("Token refresh failed: " . $refreshEx->getMessage());
-                        break;
-                    }
+                    error_log("Forced refresh succeeded - retrying API call");
+                    continue;
                 }
 
-                // Other errors
-                $errorMessage = $apiResp
-                    ? (string)$apiResp->getBody()
-                    : $e->getMessage();
+                $errorMessage = $apiResp ? (string)$apiResp->getBody() : $e->getMessage();
 
                 return $this->jsonResponse($response, [
                     'error'   => 'API request failed',
                     'message' => $errorMessage,
-                ], $apiResp ? $apiResp->getStatusCode() : 502);
+                ], $errorCode ?: 502);
             }
         }
 
@@ -104,8 +99,6 @@ class ApiController
     private function jsonResponse(ResponseInterface $response, array $data, int $status): ResponseInterface
     {
         $response->getBody()->write(json_encode($data));
-        return $response
-            ->withHeader('Content-Type', 'application/json')
-            ->withStatus($status);
+        return $response->withHeader('Content-Type', 'application/json')->withStatus($status);
     }
 }

@@ -22,6 +22,7 @@ ini_set('session.cookie_httponly', 1);
 ini_set('session.cookie_secure', $sessionSecure);
 ini_set('session.cookie_samesite', $_ENV['SESSION_SAMESITE'] ?? 'Lax');
 ini_set('session.gc_maxlifetime', $sessionLifetime);
+ini_set('session.cookie_lifetime', $sessionLifetime); 
 ini_set('session.name', $sessionName);
 
 session_start();

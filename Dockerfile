@@ -34,7 +34,7 @@ FROM base AS production
 
 COPY . .
 
-RUN composer install --no-dev --optimize-autoloader --no-interaction
+# RUN composer install --no-dev --optimize-autoloader --no-interaction
 
 RUN echo "display_errors=Off" > /usr/local/etc/php/conf.d/prod.ini \
  && echo "opcache.enable=1" >> /usr/local/etc/php/conf.d/prod.ini \
